@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>羊奶 CRM (Grid版)</title>
+    <title>羊奶 CRM (修正版)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -11,19 +11,12 @@
 
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; }
-        /* 隱藏捲軸 */
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        
-        /* 數量標籤動畫 */
         .qty-badge { transition: transform 0.1s; z-index: 10; }
         .qty-badge:active { transform: scale(1.2); }
-        
-        /* 狀態標籤色系 */
         .status-save { @apply bg-slate-100 text-slate-600 border-slate-300; }
         .status-billed { @apply bg-blue-50 text-blue-600 border-blue-200; }
         .status-paid { @apply bg-emerald-50 text-emerald-600 border-emerald-200; }
-
-        /* 按鈕點擊效果 */
         .btn-active:active { transform: scale(0.96); }
     </style>
 </head>
@@ -79,11 +72,10 @@
                     <div class="flex flex-col sm:flex-row gap-4">
                         <div class="flex-1 space-y-3">
                             <div>
-                                <label class="text-xs text-slate-500 font-bold">顧客姓名 (自動帶入)</label>
+                                <label class="text-xs text-slate-500 font-bold">顧客姓名</label>
                                 <input type="text" v-model="form.customerName" @input="onNameInput" list="customer-list" class="w-full border-b border-slate-300 py-1 text-lg font-bold outline-none focus:border-indigo-500 bg-transparent" placeholder="輸入姓名">
                                 <datalist id="customer-list"><option v-for="c in savedCustomers" :value="c.name"></option></datalist>
                             </div>
-                            
                             <div class="flex gap-3">
                                 <div class="w-1/2">
                                     <label class="text-xs text-slate-500 font-bold">地區</label>
@@ -96,14 +88,12 @@
                                 </div>
                             </div>
                         </div>
-
                         <div class="sm:w-48 bg-indigo-50 rounded-lg p-3 flex flex-col justify-between border border-indigo-100">
                             <div>
-                                <div class="text-xs text-indigo-400 font-bold uppercase">訂單總計</div>
+                                <div class="text-xs text-indigo-400 font-bold uppercase">總計</div>
                                 <div class="text-2xl font-bold text-indigo-700">${{ totalAmount.toLocaleString() }}</div>
-                                <div class="text-sm text-indigo-500 font-medium">共 {{ totalCount }} 瓶</div>
+                                <div class="text-sm text-indigo-500 font-medium">{{ totalCount }} 瓶</div>
                             </div>
-                            
                             <div class="mt-3 pt-3 border-t border-indigo-200">
                                 <select v-model="form.status" class="w-full text-xs mb-2 p-1 rounded bg-white border border-indigo-200 text-indigo-600 font-bold outline-none">
                                     <option>暫時儲存</option>
@@ -120,7 +110,7 @@
                 </div>
 
                 <div class="bg-white px-4 py-2 rounded-lg border border-slate-200 flex items-center justify-between">
-                    <span class="text-xs font-bold text-slate-500">快速篩選</span>
+                    <span class="text-xs font-bold text-slate-500">篩選星期</span>
                     <div class="flex gap-2">
                         <label v-for="day in [1, 2, 5]" :key="day" :class="['w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border cursor-pointer select-none transition', form.selectedDays.includes(day) ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-300 border-slate-200']">
                             <input type="checkbox" :value="day" v-model="form.selectedDays" class="hidden" @change="generateDates">
@@ -131,9 +121,9 @@
 
                 <div class="bg-white p-3 rounded-xl border border-slate-200">
                     <div class="flex justify-between items-center mb-1">
-                        <label class="text-xs font-bold text-slate-500"><i class="far fa-file-alt"></i> 帳務摘要</label>
+                        <label class="text-xs font-bold text-slate-500"><i class="far fa-file-alt"></i> 摘要</label>
                         <button @click="copyBill" class="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-0.5 rounded transition">
-                            <i class="far fa-copy"></i> 複製文字
+                            <i class="far fa-copy"></i> 複製
                         </button>
                     </div>
                     <textarea readonly v-model="generatedBillText" class="w-full h-24 text-xs font-mono bg-slate-50 border border-slate-200 rounded p-2 text-slate-600 outline-none resize-none"></textarea>
@@ -141,34 +131,34 @@
 
                 <div class="grid grid-cols-3 gap-2 sm:gap-4">
                     <div v-for="(monthData, mIndex) in monthsGrid" :key="mIndex" class="bg-white border border-slate-200 rounded-lg overflow-hidden flex flex-col h-full">
-                        
                         <div class="bg-slate-50 p-1.5 text-center border-b border-slate-100 flex justify-between items-center px-2">
                             <span class="text-xs font-bold text-slate-700">{{ monthData.title }}</span>
                             <span v-if="monthData.total > 0" class="text-[10px] bg-indigo-100 text-indigo-700 px-1.5 rounded-full font-bold">{{ monthData.total }}</span>
                         </div>
-
                         <div class="p-1.5 grid grid-cols-3 gap-1 content-start flex-1">
                             <div v-for="d in monthData.days" :key="d.fullDate" 
                                  @click="toggleDateQty(d)"
-                                 :class="['aspect-square rounded flex flex-col items-center justify-center relative cursor-pointer select-none border transition',
-                                    d.qty > 0 ? 'bg-indigo-50 border-indigo-500 shadow-sm' : 'bg-white border-slate-100'
-                                 ]">
+                                 :class="['aspect-square rounded flex flex-col items-center justify-center relative cursor-pointer select-none border transition', d.qty > 0 ? 'bg-indigo-50 border-indigo-500 shadow-sm' : 'bg-white border-slate-100']">
                                 <span class="text-[10px] font-bold text-slate-600">{{ d.dateStr }}</span>
                                 <span class="text-[8px] text-slate-400 scale-90">{{ d.dayStr }}</span>
-                                
-                                <div v-if="d.qty > 0" class="qty-badge absolute -top-1 -right-1 w-4 h-4 bg-indigo-600 text-white rounded-full flex items-center justify-center text-[9px] font-bold shadow-sm border border-white">
-                                    {{ d.qty }}
-                                </div>
+                                <div v-if="d.qty > 0" class="qty-badge absolute -top-1 -right-1 w-4 h-4 bg-indigo-600 text-white rounded-full flex items-center justify-center text-[9px] font-bold shadow-sm border border-white">{{ d.qty }}</div>
                             </div>
-                            
-                            <div v-if="monthData.days.length === 0" class="col-span-3 text-[10px] text-slate-300 text-center py-4">
-                                無排程
-                            </div>
+                            <div v-if="monthData.days.length === 0" class="col-span-3 text-[10px] text-slate-300 text-center py-4">無排程</div>
                         </div>
                     </div>
                 </div>
 
                 <div class="h-10"></div>
+            </div>
+            
+            <div v-if="logs.length > 0" class="p-4 bg-red-50 border-t border-red-200 text-xs font-mono text-red-700 max-h-40 overflow-y-auto">
+                <div class="flex justify-between items-center mb-2 font-bold sticky top-0 bg-red-50">
+                    <span>⚠️ 系統日誌 ({{ logs.length }})</span>
+                    <button @click="copyLogs" class="bg-red-200 hover:bg-red-300 px-2 py-1 rounded">複製錯誤訊息</button>
+                </div>
+                <div v-for="(log, i) in logs" :key="i" class="mb-1 border-b border-red-100 pb-1">
+                    [{{ log.time }}] {{ log.msg }}
+                </div>
             </div>
 
         </main>
@@ -179,7 +169,6 @@
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getDatabase, ref as dbRef, push, onValue, remove, update } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
-        // 您的 Config
         const firebaseConfig = {
             apiKey: "AIzaSyB6D9vh6J2mdnjz2VXEVe99oi7oLF-irFo",
             authDomain: "crm-ts-1225-001.firebaseapp.com",
@@ -195,139 +184,132 @@
 
         createApp({
             setup() {
-                // UI 狀態
                 const currentTab = ref('list');
                 const loading = ref(true);
                 const isSaving = ref(false);
                 const editMode = ref(false);
                 const currentOrderId = ref(null);
                 const dayMap = { 1: '一', 2: '二', 5: '五' };
+                const logs = ref([]);
 
-                // 資料庫資料
                 const orders = ref([]);
                 const savedCustomers = ref([]);
-                
-                // 表單資料
-                const form = reactive({
-                    customerName: '',
-                    area: '',
-                    unitPrice: 35,
-                    status: '暫時儲存',
-                    selectedDays: [1]
-                });
-                
-                // 核心：所有日期的平面列表 (flat list)
+                const form = reactive({ customerName: '', area: '', unitPrice: 35, status: '暫時儲存', selectedDays: [1] });
                 const dateList = ref([]);
 
-                // --- 1. 日期與 Grid 生成邏輯 ---
-                const generateDates = () => {
-                    const tempDates = [];
-                    const start = new Date(2025, 0, 1); // 2025/01/01
-                    const end = new Date(2025, 11, 31); // 2025/12/31
-                    const activeDays = new Set(form.selectedDays); 
-                    
-                    // 記憶舊數量
-                    const existingMap = new Map();
-                    dateList.value.forEach(d => { if(d.qty > 0) existingMap.set(d.fullDate, d.qty); });
-
-                    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-                        const day = d.getDay();
-                        if (activeDays.has(day)) {
-                            const y = d.getFullYear();
-                            const m = d.getMonth(); // 0-11
-                            const dd = d.getDate();
-                            // 格式化
-                            const mStr = (m + 1).toString().padStart(2, '0');
-                            const dStr = dd.toString().padStart(2, '0');
-                            const fDate = `${y}/${mStr}/${dStr}`;
-                            
-                            tempDates.push({
-                                fullDate: fDate,
-                                monthIndex: m, // 0-11 用於分組
-                                dateStr: dStr,
-                                dayStr: dayMap[day],
-                                qty: existingMap.get(fDate) || 0 
-                            });
-                        }
-                    }
-                    dateList.value = tempDates;
+                // --- 錯誤處理 ---
+                const logError = (error, context = '') => {
+                    const msg = context ? `${context}: ${error.message}` : error.message;
+                    logs.value.unshift({ time: new Date().toLocaleTimeString(), msg });
+                    console.error(error);
+                };
+                
+                const copyLogs = () => {
+                    const text = logs.value.map(l => `[${l.time}] ${l.msg}`).join('\n');
+                    navigator.clipboard.writeText(text).then(() => alert('日誌已複製，請貼給 Gemini'));
                 };
 
-                // 將平面日期轉為 12 個月的結構，供 v-for 渲染 Grid
-                const monthsGrid = computed(() => {
-                    // 初始化 12 個月空陣列
-                    const grid = Array.from({ length: 12 }, (_, i) => ({
-                        title: `2025-${(i + 1).toString().padStart(2, '0')}`,
-                        days: [],
-                        total: 0
-                    }));
+                window.onerror = function(msg, url, line, col, error) {
+                    logError({ message: `${msg} (Line: ${line})` }, 'Global Error');
+                };
 
-                    // 填入日期
+                // --- 日期處理 (修正 Key 問題) ---
+                // Helper: 轉換日期格式 (2025/01/01 <-> 2025-01-01)
+                const toSafeKey = (dateStr) => dateStr.replace(/\//g, '-');
+                const fromSafeKey = (keyStr) => keyStr.replace(/-/g, '/');
+
+                const generateDates = () => {
+                    try {
+                        const tempDates = [];
+                        const start = new Date(2025, 0, 1);
+                        const end = new Date(2025, 11, 31);
+                        const activeDays = new Set(form.selectedDays); 
+                        
+                        const existingMap = new Map();
+                        // 使用 safe key 來查找
+                        dateList.value.forEach(d => { if(d.qty > 0) existingMap.set(d.fullDate, d.qty); });
+
+                        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                            const day = d.getDay();
+                            if (activeDays.has(day)) {
+                                const y = d.getFullYear();
+                                const m = d.getMonth();
+                                const dd = d.getDate();
+                                const mStr = (m + 1).toString().padStart(2, '0');
+                                const dStr = dd.toString().padStart(2, '0');
+                                const fDate = `${y}/${mStr}/${dStr}`;
+                                
+                                tempDates.push({
+                                    fullDate: fDate,
+                                    monthIndex: m,
+                                    dateStr: dStr,
+                                    dayStr: dayMap[day],
+                                    qty: existingMap.get(fDate) || 0 
+                                });
+                            }
+                        }
+                        dateList.value = tempDates;
+                    } catch (e) {
+                        logError(e, 'generateDates');
+                    }
+                };
+
+                const monthsGrid = computed(() => {
+                    const grid = Array.from({ length: 12 }, (_, i) => ({ title: `2025-${(i + 1).toString().padStart(2, '0')}`, days: [], total: 0 }));
                     dateList.value.forEach(d => {
-                        grid[d.monthIndex].days.push(d);
-                        grid[d.monthIndex].total += d.qty;
+                        if(grid[d.monthIndex]) {
+                            grid[d.monthIndex].days.push(d);
+                            grid[d.monthIndex].total += d.qty;
+                        }
                     });
                     return grid;
                 });
 
-                // 點擊切換數量
                 const toggleDateQty = (d) => {
-                    // 0 -> 1 -> 1.5 -> 2 -> 0.5 -> 0
-                    if (d.qty === 0) d.qty = 1;
-                    else if (d.qty === 1) d.qty = 1.5;
-                    else if (d.qty === 1.5) d.qty = 2;
-                    else if (d.qty === 2) d.qty = 0.5;
-                    else d.qty = 0;
+                    if (d.qty === 0) d.qty = 1; else if (d.qty === 1) d.qty = 1.5; else if (d.qty === 1.5) d.qty = 2; else if (d.qty === 2) d.qty = 0.5; else d.qty = 0;
                 };
 
-                // --- 2. 摘要文字計算 ---
                 const generatedBillText = computed(() => {
                     const activeDates = dateList.value.filter(d => d.qty > 0);
                     if (activeDates.length === 0) return '尚未選擇日期';
-                    
-                    // 按月分組字串
                     const grouped = {};
                     activeDates.forEach(d => {
-                        const mKey = d.fullDate.substring(0, 7); // 2025/01
+                        const mKey = d.fullDate.substring(0, 7);
                         if (!grouped[mKey]) grouped[mKey] = [];
                         grouped[mKey].push(`${d.dateStr}(${d.dayStr})${d.qty!==1?'*'+d.qty:''}`);
                     });
-
                     let details = '';
-                    for(const [m, ds] of Object.entries(grouped)) {
-                        details += `\n【${m}】${ds.join('、')}`;
-                    }
-
+                    for(const [m, ds] of Object.entries(grouped)) details += `\n【${m}】${ds.join('、')}`;
                     return `客戶：${form.customerName}\n狀態：${form.status}\n總計：${totalCount.value}瓶 / $${totalAmount.value}\n----------------${details}`;
                 });
 
-                const copyBill = () => {
-                    navigator.clipboard.writeText(generatedBillText.value).then(() => alert('已複製摘要'));
-                };
+                const copyBill = () => { navigator.clipboard.writeText(generatedBillText.value).then(() => alert('已複製摘要')); };
 
-                // --- 3. CRUD ---
+                // --- CRUD (修正 Key 寫入) ---
                 const saveOrder = async () => {
                     if (!form.customerName) { alert('請輸入姓名'); return; }
                     isSaving.value = true;
-                    
-                    const activeDates = dateList.value.filter(d => d.qty > 0);
-                    const payload = {
-                        customerName: form.customerName,
-                        area: form.area,
-                        unitPrice: form.unitPrice,
-                        status: form.status,
-                        selectedDays: form.selectedDays,
-                        totalAmount: totalAmount.value,
-                        totalCount: totalCount.value,
-                        // 儲存格式: { "2025/01/01": 1.5 }
-                        dates: activeDates.reduce((acc, curr) => {
-                            acc[curr.fullDate] = curr.qty;
-                            return acc;
-                        }, {}),
-                        updatedAt: new Date().toISOString()
-                    };
-
                     try {
+                        const activeDates = dateList.value.filter(d => d.qty > 0);
+                        
+                        // ★ 修正：將日期鍵值轉為 Safe Key (2025-01-01)
+                        const datesObj = activeDates.reduce((acc, curr) => {
+                            acc[toSafeKey(curr.fullDate)] = curr.qty;
+                            return acc;
+                        }, {});
+
+                        const payload = {
+                            customerName: form.customerName,
+                            area: form.area,
+                            unitPrice: form.unitPrice,
+                            status: form.status,
+                            selectedDays: form.selectedDays,
+                            totalAmount: totalAmount.value,
+                            totalCount: totalCount.value,
+                            dates: datesObj, // 使用修正後的物件
+                            updatedAt: new Date().toISOString()
+                        };
+
                         if (editMode.value && currentOrderId.value) {
                             await update(dbRef(db, `orders/${currentOrderId.value}`), payload);
                         } else {
@@ -335,89 +317,97 @@
                             await push(dbRef(db, 'orders'), payload);
                         }
                         
-                        // 存顧客
                         const key = btoa(encodeURIComponent(form.customerName)).replace(/[^a-zA-Z0-9]/g, '');
-                        await update(dbRef(db, `customers/${key}`), { 
-                            name: form.customerName, area: form.area, unitPrice: form.unitPrice 
-                        });
+                        await update(dbRef(db, `customers/${key}`), { name: form.customerName, area: form.area, unitPrice: form.unitPrice });
 
                         alert('✅ 儲存成功');
                         switchTab('list');
                     } catch (e) {
-                        alert('錯誤: ' + e.message);
+                        logError(e, 'saveOrder');
+                        alert('儲存失敗，請查看下方錯誤日誌');
                     } finally {
                         isSaving.value = false;
                     }
                 };
 
                 const editOrder = (o) => {
-                    editMode.value = true;
-                    currentOrderId.value = o.id;
-                    form.customerName = o.customerName;
-                    form.area = o.area || '';
-                    form.unitPrice = o.unitPrice;
-                    form.status = o.status;
-                    form.selectedDays = o.selectedDays || [1];
-                    generateDates();
-                    
-                    // 回填數量
-                    if(o.dates) {
-                        dateList.value.forEach(d => {
-                            d.qty = o.dates[d.fullDate] || 0;
-                        });
+                    try {
+                        editMode.value = true;
+                        currentOrderId.value = o.id;
+                        form.customerName = o.customerName;
+                        form.area = o.area || '';
+                        form.unitPrice = o.unitPrice;
+                        form.status = o.status;
+                        form.selectedDays = o.selectedDays || [1];
+                        generateDates();
+                        
+                        // ★ 修正：讀取時將 Safe Key 轉回正常日期 (2025/01/01)
+                        if(o.dates) {
+                            dateList.value.forEach(d => {
+                                const safeKey = toSafeKey(d.fullDate);
+                                d.qty = o.dates[safeKey] || 0;
+                            });
+                        }
+                        switchTab('create');
+                    } catch (e) {
+                        logError(e, 'editOrder');
                     }
-                    switchTab('create');
                 };
 
-                const deleteOrder = (id) => { if(confirm('確定刪除?')) remove(dbRef(db, `orders/${id}`)); };
+                const deleteOrder = async (id) => {
+                    if(confirm('確定刪除?')) {
+                        try { await remove(dbRef(db, `orders/${id}`)); } 
+                        catch(e) { logError(e, 'deleteOrder'); }
+                    }
+                };
                 
-                // --- Helpers ---
                 const onNameInput = () => {
                     const f = savedCustomers.value.find(c => c.name === form.customerName);
                     if (f) { form.area = f.area || ''; form.unitPrice = f.unitPrice || 35; }
                 };
 
                 const createMockData = async () => {
-                    const mocks = [{name:'測試客A',price:35,st:'暫時儲存'}, {name:'測試客B',price:40,st:'登記出帳'}];
-                    for(const m of mocks) {
-                        await push(dbRef(db, 'orders'), {
-                            customerName: m.name, unitPrice: m.price, status: m.st, totalAmount: 100, totalCount: 2,
-                            dates: {'2025/01/01': 2}, createdAt: new Date().toISOString()
-                        });
-                    }
+                    try {
+                        const mocks = [{name:'測試客A',price:35,st:'暫時儲存'}, {name:'測試客B',price:40,st:'登記出帳'}];
+                        for(const m of mocks) {
+                            // Mock 也使用 Safe Key
+                            await push(dbRef(db, 'orders'), {
+                                customerName: m.name, unitPrice: m.price, status: m.st, totalAmount: 100, totalCount: 2,
+                                dates: {'2025-01-01': 2}, // Safe Key
+                                createdAt: new Date().toISOString()
+                            });
+                        }
+                    } catch (e) { logError(e, 'createMockData'); }
                 };
 
                 const switchTab = (t) => {
-                    if (t === 'create') { 
-                        // 重置表單
-                        if (!editMode.value) {
-                             form.customerName=''; form.area=''; form.unitPrice=35; 
-                             form.status='暫時儲存'; form.selectedDays=[1];
-                             generateDates();
-                        }
-                    } else {
-                        editMode.value = false;
-                        currentOrderId.value = null;
+                    if (t === 'create' && !editMode.value) {
+                         form.customerName=''; form.area=''; form.unitPrice=35; form.status='暫時儲存'; form.selectedDays=[1];
+                         generateDates();
+                    } else if (t === 'list') {
+                        editMode.value = false; currentOrderId.value = null;
                     }
                     currentTab.value = t;
                 };
 
                 const switchToCreate = () => { editMode.value = false; switchTab('create'); };
 
-                // Lifecycle
                 onMounted(() => {
-                    onValue(dbRef(db, 'orders'), (s) => { 
-                        const d = s.val(); 
-                        orders.value = d ? Object.entries(d).map(([k, v]) => ({ id: k, ...v })) : [];
-                        loading.value = false;
-                    });
-                    onValue(dbRef(db, 'customers'), (s) => {
-                        savedCustomers.value = s.val() ? Object.values(s.val()) : [];
-                    });
-                    generateDates();
+                    try {
+                        onValue(dbRef(db, 'orders'), (s) => { 
+                            const d = s.val(); 
+                            orders.value = d ? Object.entries(d).map(([k, v]) => ({ id: k, ...v })) : [];
+                            loading.value = false;
+                        }, (error) => logError(error, 'Firebase Read Orders'));
+                        
+                        onValue(dbRef(db, 'customers'), (s) => {
+                            savedCustomers.value = s.val() ? Object.values(s.val()) : [];
+                        }, (error) => logError(error, 'Firebase Read Customers'));
+                        
+                        generateDates();
+                    } catch (e) { logError(e, 'onMounted'); }
                 });
 
-                // Computed
                 const totalCount = computed(() => dateList.value.reduce((s, d) => s + d.qty, 0));
                 const totalAmount = computed(() => Math.floor(totalCount.value * form.unitPrice));
                 const sortedOrders = computed(() => [...orders.value].sort((a,b) => new Date(b.updatedAt||b.createdAt)-new Date(a.updatedAt||a.createdAt)));
@@ -428,7 +418,7 @@
                     pageTitle: computed(() => currentTab.value === 'list' ? '訂單管理' : (editMode.value ? '修改訂單' : '新增訂單')),
                     currentTab, loading, isSaving, editMode, switchTab, switchToCreate,
                     form, savedCustomers, uniqueAreas, onNameInput, dayMap, generateDates,
-                    monthsGrid, toggleDateQty,
+                    monthsGrid, toggleDateQty, logs, copyLogs,
                     totalCount, totalAmount, generatedBillText, copyBill,
                     sortedOrders, saveOrder, editOrder, deleteOrder,
                     getStatusClass, createMockData
