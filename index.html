@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>羊奶配送管理系統 (Firebase版)</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <style>
+        /* iPhone 優化字體與捲動 */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; -webkit-tap-highlight-color: transparent; }
+        
+        /* 隱藏捲軸但保留功能 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* iPhone 安全區域 (避開瀏海與底部橫條) */
+        .safe-top { padding-top: env(safe-area-inset-top); }
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+
+        /* 卡片與動畫 */
+        .card-shadow { box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.05); }
+        .slide-enter-active, .slide-leave-active { transition: transform 0.3s ease; }
+        .slide-enter-from, .slide-leave-to { transform: translateY(100%); }
+        
+        /* 狀態標籤顏色 */
+        .status-new { @apply bg-blue-100 text-blue-700; }
+        .status-paid { @apply bg-green-100 text-green-700; }
+        .status-pending { @apply bg-orange-100 text-orange-700; }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col bg-slate-50 text-slate-800">
+
+    <div id="app" class="flex flex-col h-full w-full">
+
+        <header class="bg-white border-b border-slate-200 px-4 py-3 safe-top flex justify-between items-center z-20 shadow-sm shrink-0">
+            <h1 class="text-lg font-bold flex items-center gap-2">
+                <i class="fas fa-box-open text-blue-600"></i> 
+                {{ currentTab === 'list' ? '訂單管理' : '新增排程' }}
+            </h1>
+            <div v-if="currentTab === 'list'" class="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
+                共 {{ sortedOrders.length }} 筆
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto no-scrollbar p-4 pb-24 relative">
+            
+            <div v-if="currentTab === 'list'" class="space-y-4">
+                <div v-if="loading" class="text-center py-10 text-slate-400">
+                    <i class="fas fa-spinner fa-spin text-2xl"></i><br>資料讀取中...
+                </div>
+
+                <div v-else-if="sortedOrders.length === 0" class="text-center py-20 opacity-50">
+                    <i class="fas fa-clipboard-list text-6xl text-slate-300 mb-4"></i>
+                    <p>目前沒有訂單資料</p>
+                    <button @click="currentTab = 'create'" class="mt-4 text-blue-600 font-bold">去新增第一筆 +</button>
+                </div>
+
+                <div v-for="order in sortedOrders" :key="order.id" class="bg-white rounded-xl p-4 card-shadow border border-slate-100 relative">
+                    <button @click="deleteOrder(order.id)" class="absolute top-3 right-3 text-slate-300 hover:text-red-500 transition p-2">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+
+                    <div class="flex justify-between items-start pr-8">
+                        <div>
+                            <h3 class="font-bold text-lg text-slate-800">{{ order.customerName || '未命名客戶' }}</h3>
+                            <div class="text-xs text-slate-400 mt-1">{{ formatDate(order.createdAt) }}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-bold text-xl text-blue-600">${{ order.totalAmount }}</div>
+                            <div class="text-xs text-slate-500">{{ order.count }} 天</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex items-center gap-2 overflow-x-auto no-scrollbar">
+                        <span class="text-xs font-bold text-slate-500 shrink-0">狀態：</span>
+                        <button v-for="st in statusOptions" :key="st" 
+                            @click="updateStatus(order.id, st)"
+                            :class="['px-3 py-1 rounded-full text-xs font-bold transition border', 
+                                order.status === st ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-500 border-slate-200']">
+                            {{ st }}
+                        </button>
+                    </div>
+
+                    <div class="mt-3 pt-3 border-t border-slate-50">
+                        <button @click="order.showDetail = !order.showDetail" class="text-xs text-slate-500 flex items-center gap-1 w-full">
+                            {{ order.showDetail ? '收合詳細日期' : '查看詳細日期' }} <i class="fas" :class="order.showDetail ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                        </button>
+                        <div v-if="order.showDetail" class="mt-2 p-2 bg-slate-50 rounded text-xs text-slate-600 font-mono whitespace-pre-line">
+                            {{ order.billText }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="currentTab === 'create'" class="space-y-6">
+                
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs text-slate-500 block mb-1">客戶姓名</label>
+                            <input v-model="newOrder.customerName" type="text" class="w-full bg-slate-50 border-0 rounded p-2 text-sm font-bold focus:ring-2 ring-blue-200" placeholder="輸入姓名">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-500 block mb-1">單價 ($)</label>
+                            <input v-model.number="newOrder.unitPrice" type="number" class="w-full bg-slate-50 border-0 rounded p-2 text-sm font-bold text-right focus:ring-2 ring-blue-200">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <h3 class="text-sm font-bold text-slate-500 px-1">點擊選擇日期 (週一、二)</h3>
+                    <div v-for="(group, key) in groupedDates" :key="key" class="bg-white rounded-lg overflow-hidden border border-slate-200">
+                        <div @click="toggleGroup(key)" class="p-3 bg-slate-50 flex justify-between items-center text-sm font-bold text-slate-700">
+                            <span>{{ key }}</span>
+                            <i class="fas fa-chevron-down text-xs text-slate-400 transition" :class="{'rotate-180': openGroups[key]}"></i>
+                        </div>
+                        <div v-show="openGroups[key]" class="p-2 grid grid-cols-5 gap-2">
+                            <div v-for="d in group" :key="d.fullDate" 
+                                 @click="d.selected = !d.selected"
+                                 :class="['h-12 rounded flex flex-col items-center justify-center text-xs transition cursor-pointer border',
+                                    d.selected ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-100'
+                                 ]">
+                                <span class="font-bold">{{ d.dateStr }}</span>
+                                <span class="scale-75 opacity-80">{{ d.dayStr }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="h-20"></div>
+            </div>
+
+        </main>
+
+        <div v-if="currentTab === 'create'" class="absolute bottom-[80px] left-0 w-full px-4 z-30">
+            <div class="bg-white/90 backdrop-blur shadow-2xl rounded-2xl p-4 border border-blue-100 flex justify-between items-center">
+                <div>
+                    <div class="text-xs text-slate-500">已選 {{ totalSelected }} 天</div>
+                    <div class="text-2xl font-bold text-blue-600">${{ totalAmount.toLocaleString() }}</div>
+                </div>
+                <button @click="saveOrder" :disabled="isSaving || totalSelected === 0" 
+                    class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-200 active:scale-95 transition disabled:bg-slate-300">
+                    <span v-if="!isSaving">儲存訂單</span>
+                    <span v-else><i class="fas fa-spinner fa-spin"></i></span>
+                </button>
+            </div>
+        </div>
+
+        <nav class="bg-white border-t border-slate-200 safe-bottom flex justify-around items-center py-2 z-40 shrink-0">
+            <button @click="currentTab = 'list'" :class="['flex flex-col items-center p-2 w-1/2', currentTab === 'list' ? 'text-blue-600' : 'text-slate-400']">
+                <i class="fas fa-list-ul text-xl mb-1"></i>
+                <span class="text-[10px] font-bold">訂單列表</span>
+            </button>
+            <div class="w-px h-8 bg-slate-100"></div>
+            <button @click="currentTab = 'create'" :class="['flex flex-col items-center p-2 w-1/2', currentTab === 'create' ? 'text-blue-600' : 'text-slate-400']">
+                <i class="fas fa-plus-circle text-xl mb-1"></i>
+                <span class="text-[10px] font-bold">新增排程</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <script type="module">
+        import { createApp, ref, computed, reactive, onMounted } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref as dbRef, push, onValue, remove, update } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        // 1. Firebase Config (User Provided)
+        const firebaseConfig = {
+            apiKey: "AIzaSyB6D9vh6J2mdnjz2VXEVe99oi7oLF-irFo",
+            authDomain: "crm-ts-1225-001.firebaseapp.com",
+            databaseURL: "https://crm-ts-1225-001-default-rtdb.firebaseio.com",
+            projectId: "crm-ts-1225-001",
+            storageBucket: "crm-ts-1225-001.firebasestorage.app",
+            messagingSenderId: "925760221722",
+            appId: "1:925760221722:web:1aeda0b82f1f16b8dcd7a3"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        createApp({
+            setup() {
+                // UI State
+                const currentTab = ref('list'); // 'list' or 'create'
+                const loading = ref(true);
+                const isSaving = ref(false);
+                const openGroups = reactive({}); // Accordion state
+
+                // Data State
+                const orders = ref([]); // From Firebase
+                const statusOptions = ['討論中', '已確認', '已付款', '配送中'];
+                
+                // Create Form State
+                const newOrder = reactive({
+                    customerName: '',
+                    unitPrice: 35
+                });
+                const dateList = ref([]); // Generated Calendar Dates
+
+                // --- 1. Date Logic (Calendar) ---
+                const generateDates = () => {
+                    const tempDates = [];
+                    const start = new Date(2024, 11, 1);
+                    const end = new Date(2025, 11, 31);
+                    const dayMap = { 1: '一', 2: '二' };
+                    
+                    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                        const day = d.getDay();
+                        if (day === 1 || day === 2) {
+                            const y = d.getFullYear();
+                            const m = (d.getMonth() + 1).toString().padStart(2, '0');
+                            const dd = d.getDate().toString().padStart(2, '0');
+                            tempDates.push({
+                                fullDate: `${y}/${m}/${dd}`,
+                                monthGroup: `${y}年 ${m}月`,
+                                dateStr: `${m}/${dd}`,
+                                dayStr: dayMap[day],
+                                selected: false
+                            });
+                        }
+                    }
+                    dateList.value = tempDates;
+                    // Default open current month
+                    const currentMonthKey = tempDates[0].monthGroup;
+                    openGroups[currentMonthKey] = true;
+                };
+
+                // --- 2. Computed ---
+                const groupedDates = computed(() => {
+                    return dateList.value.reduce((acc, curr) => {
+                        if (!acc[curr.monthGroup]) acc[curr.monthGroup] = [];
+                        acc[curr.monthGroup].push(curr);
+                        return acc;
+                    }, {});
+                });
+
+                const totalSelected = computed(() => dateList.value.filter(d => d.selected).length);
+                const totalAmount = computed(() => totalSelected.value * newOrder.unitPrice);
+
+                const sortedOrders = computed(() => {
+                    // Sort by createdAt descending (newest first)
+                    return [...orders.value].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                });
+
+                // --- 3. Text Generation ---
+                const generateBillText = () => {
+                    const selected = dateList.value.filter(d => d.selected);
+                    const datesByMonth = selected.reduce((acc, curr) => {
+                        if (!acc[curr.monthGroup]) acc[curr.monthGroup] = [];
+                        acc[curr.monthGroup].push(`${curr.dateStr}(${curr.dayStr})`);
+                        return acc;
+                    }, {});
+
+                    let dateText = '';
+                    for (const [m, ds] of Object.entries(datesByMonth)) {
+                        dateText += `\n【${m}】\n${ds.join('、')}\n`;
+                    }
+                    return dateText;
+                };
+
+                // --- 4. Firebase CRUD Operations ---
+                
+                // CREATE (新增)
+                const saveOrder = () => {
+                    if (!newOrder.customerName) { alert('請輸入客戶姓名'); return; }
+                    
+                    isSaving.value = true;
+                    const selectedDates = dateList.value.filter(d => d.selected);
+                    
+                    const payload = {
+                        customerName: newOrder.customerName,
+                        unitPrice: newOrder.unitPrice,
+                        totalAmount: totalAmount.value,
+                        count: totalSelected.value,
+                        status: '討論中',
+                        billText: generateBillText(), // 儲存預生成的文字
+                        dates: selectedDates.map(d => d.fullDate),
+                        createdAt: new Date().toISOString()
+                    };
+
+                    push(dbRef(db, 'orders'), payload)
+                        .then(() => {
+                            alert('✅ 訂單已儲存！');
+                            // Reset Form
+                            newOrder.customerName = '';
+                            dateList.value.forEach(d => d.selected = false);
+                            currentTab.value = 'list'; // Go to list view
+                        })
+                        .catch((error) => alert('儲存失敗: ' + error.message))
+                        .finally(() => isSaving.value = false);
+                };
+
+                // READ (讀取 - 實時監聽)
+                onMounted(() => {
+                    generateDates();
+                    const ordersRef = dbRef(db, 'orders');
+                    onValue(ordersRef, (snapshot) => {
+                        const data = snapshot.val();
+                        if (data) {
+                            // Convert Object to Array
+                            orders.value = Object.entries(data).map(([key, val]) => ({
+                                id: key,
+                                ...val,
+                                showDetail: false // UI state
+                            }));
+                        } else {
+                            orders.value = [];
+                        }
+                        loading.value = false;
+                    });
+                });
+
+                // UPDATE (更新狀態)
+                const updateStatus = (id, newStatus) => {
+                    update(dbRef(db, `orders/${id}`), { status: newStatus });
+                };
+
+                // DELETE (刪除)
+                const deleteOrder = (id) => {
+                    if (confirm('確定要刪除這筆訂單嗎？')) {
+                        remove(dbRef(db, `orders/${id}`));
+                    }
+                };
+
+                // Helper
+                const toggleGroup = (key) => { openGroups[key] = !openGroups[key]; };
+                const formatDate = (isoString) => {
+                    if(!isoString) return '';
+                    const d = new Date(isoString);
+                    return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${d.getMinutes().toString().padStart(2,'0')}`;
+                };
+
+                return {
+                    currentTab, loading, isSaving, 
+                    newOrder, groupedDates, openGroups, toggleGroup,
+                    totalSelected, totalAmount, saveOrder,
+                    orders, sortedOrders, deleteOrder, updateStatus, statusOptions,
+                    formatDate
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
