@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>羊奶 CRM (統計+半瓶版)</title>
+    <title>羊奶 CRM (模擬資料版)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -23,6 +23,9 @@
         .status-save { @apply bg-slate-100 text-slate-600 border-slate-300; }
         .status-billed { @apply bg-blue-50 text-blue-600 border-blue-200; }
         .status-paid { @apply bg-emerald-50 text-emerald-600 border-emerald-200; }
+
+        /* 按鈕點擊回饋 */
+        .btn-press:active { transform: scale(0.95); opacity: 0.9; }
     </style>
 </head>
 <body class="h-screen w-screen overflow-hidden flex flex-col text-slate-800 bg-slate-50">
@@ -34,11 +37,18 @@
                 <i v-if="currentTab === 'stats'" class="fas fa-chart-pie text-purple-600"></i>
                 <i v-else-if="currentTab === 'create'" class="fas fa-edit text-indigo-600"></i>
                 <i v-else class="fas fa-list text-blue-600"></i>
-                {{ pageTitle }}
+                <span class="truncate max-w-[100px] sm:max-w-none">{{ pageTitle }}</span>
             </h1>
-            <button v-if="currentTab === 'create'" @click="toggleAllYear" class="text-xs bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-full font-bold border border-indigo-100 active:bg-indigo-100">
-                <i class="fas fa-check-double"></i> 全年全選
-            </button>
+
+            <div class="flex items-center gap-2">
+                <button @click="createMockData" :disabled="isSaving" class="btn-press flex items-center gap-1 text-[10px] sm:text-xs bg-amber-50 text-amber-600 px-3 py-1.5 rounded-full font-bold border border-amber-200 hover:bg-amber-100 disabled:opacity-50">
+                    <i class="fas fa-magic"></i> <span class="hidden sm:inline">模擬3筆</span><span class="sm:hidden">模擬</span>
+                </button>
+
+                <button @click="switchToCreate" class="btn-press flex items-center gap-1 text-[10px] sm:text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-full font-bold shadow-md shadow-indigo-200 hover:bg-indigo-700">
+                    <i class="fas fa-plus"></i> 新增
+                </button>
+            </div>
         </header>
 
         <main class="flex-1 overflow-y-auto no-scrollbar pb-32">
@@ -52,7 +62,6 @@
                         <span>總瓶數: {{ stats.totalBottles }} 瓶</span>
                     </div>
                 </div>
-
                 <div class="grid grid-cols-3 gap-3">
                     <div class="bg-white p-3 rounded-xl border border-slate-200 text-center shadow-sm">
                         <div class="text-xs text-slate-500 mb-1">暫時儲存</div>
@@ -70,38 +79,36 @@
                         <div class="text-[10px] text-emerald-300">${{ stats.amtPaid.toLocaleString() }}</div>
                     </div>
                 </div>
-
-                <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                    <div class="bg-slate-50 px-4 py-2 text-xs font-bold text-slate-500 border-b">最近更新</div>
-                    <div class="divide-y divide-slate-100">
-                        <div v-for="log in recentOrders" :key="log.id" class="px-4 py-3 flex justify-between items-center">
-                            <div>
-                                <div class="font-bold text-sm">{{ log.customerName }}</div>
-                                <div class="text-[10px] text-slate-400">{{ formatTime(log.updatedAt || log.createdAt) }}</div>
-                            </div>
-                            <span :class="getStatusClass(log.status)" class="text-[10px] px-2 py-0.5 rounded border">
-                                {{ log.status }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <div v-if="currentTab === 'list'" class="p-4 space-y-4">
-                <div v-if="loading" class="text-center py-10 text-slate-400"><i class="fas fa-spinner fa-spin"></i> 載入中...</div>
                 
-                <div v-for="order in sortedOrders" :key="order.id" class="bg-white rounded-xl p-4 shadow-sm border border-slate-200 relative">
+                <div v-if="loading" class="text-center py-20 text-slate-400">
+                    <i class="fas fa-spinner fa-spin text-3xl mb-2"></i><br>資料載入中...
+                </div>
+                
+                <div v-else-if="sortedOrders.length === 0" class="flex flex-col items-center justify-center py-20 text-slate-400">
+                    <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4 text-3xl">
+                        <i class="fas fa-wind text-slate-300"></i>
+                    </div>
+                    <p class="font-bold text-slate-500 mb-2">目前沒有資料</p>
+                    <p class="text-xs mb-6">您可以新增一筆，或使用模擬資料快速體驗</p>
+                    
+                    <button @click="createMockData" class="btn-press bg-white border border-slate-300 px-6 py-2 rounded-full text-slate-600 font-bold shadow-sm hover:bg-slate-50">
+                        <i class="fas fa-magic text-amber-500 mr-1"></i> 生成 3 筆模擬資料
+                    </button>
+                </div>
+
+                <div v-else v-for="order in sortedOrders" :key="order.id" class="bg-white rounded-xl p-4 shadow-sm border border-slate-200 relative">
                     <div class="absolute top-4 right-4">
                         <span :class="getStatusClass(order.status)" class="text-xs px-2 py-1 rounded-full font-bold border">
                             {{ order.status }}
                         </span>
                     </div>
-
                     <div class="mb-2">
                         <h3 class="font-bold text-lg text-slate-800">{{ order.customerName }}</h3>
                         <div class="text-xs text-slate-400 mt-1">{{ order.area || '未分區' }} • ${{ order.unitPrice }}/瓶</div>
                     </div>
-                    
                     <div class="flex justify-between items-end border-t border-slate-100 pt-3 mt-2">
                         <div class="text-2xl font-bold text-indigo-600">${{ order.totalAmount }}</div>
                         <div class="flex gap-2">
@@ -113,16 +120,14 @@
             </div>
 
             <div v-if="currentTab === 'create'" class="p-4 space-y-5">
-                
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
                     <div class="mb-4">
                         <label class="text-xs text-slate-500 mb-1 block">顧客姓名</label>
                         <input type="text" v-model="form.customerName" @input="onNameInput" list="customer-list" class="w-full text-lg font-bold border-b-2 border-slate-200 focus:border-indigo-500 outline-none py-1 bg-transparent" placeholder="輸入姓名自動帶入">
                         <datalist id="customer-list"><option v-for="c in savedCustomers" :value="c.name"></option></datalist>
                     </div>
-
                     <div class="mb-4">
-                        <label class="text-xs text-slate-500 mb-2 block">溝通進度狀態</label>
+                        <label class="text-xs text-slate-500 mb-2 block">溝通進度</label>
                         <div class="grid grid-cols-3 gap-2">
                             <label v-for="st in statusOptions" :key="st" class="cursor-pointer relative">
                                 <input type="radio" v-model="form.status" :value="st" class="hidden peer">
@@ -132,7 +137,6 @@
                             </label>
                         </div>
                     </div>
-
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="text-xs text-slate-500 mb-1 block">地區</label>
@@ -147,13 +151,15 @@
                 </div>
 
                 <div class="flex items-center justify-between px-2">
-                    <span class="text-xs font-bold text-slate-400">顯示篩選</span>
                     <div class="flex gap-2">
                         <label v-for="day in [1, 2, 5]" :key="day" :class="['w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border transition cursor-pointer select-none', form.selectedDays.includes(day) ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-300 border-slate-200']">
                             <input type="checkbox" :value="day" v-model="form.selectedDays" class="hidden" @change="generateDates">
                             {{ dayMap[day] }}
                         </label>
                     </div>
+                    <button @click="toggleAllYear" class="text-xs bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full font-bold border border-indigo-100 active:bg-indigo-100">
+                        <i class="fas fa-check-double mr-1"></i>全年
+                    </button>
                 </div>
 
                 <div class="space-y-3">
@@ -164,25 +170,17 @@
                                     {{ key }}
                                     <i class="fas fa-chevron-down text-xs text-slate-400 transition" :class="{'rotate-180': openGroups[key]}"></i>
                                 </button>
-                                <button @click="toggleMonthAll(group)" class="text-[10px] bg-white border border-slate-300 px-2 py-0.5 rounded text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition">
-                                    全選本月
-                                </button>
+                                <button @click="toggleMonthAll(group)" class="text-[10px] bg-white border border-slate-300 px-2 py-0.5 rounded text-slate-500">全選本月</button>
                             </div>
                             <span v-if="groupTotal(group) > 0" class="text-xs font-bold text-indigo-600">{{ groupTotal(group) }}瓶</span>
                         </div>
-                        
                         <div v-show="openGroups[key]" class="p-2 grid grid-cols-5 gap-2">
                             <div v-for="d in group" :key="d.fullDate" 
                                  @click="toggleDateQty(d)"
-                                 :class="['h-14 rounded-lg flex flex-col items-center justify-center relative transition border cursor-pointer select-none',
-                                    d.qty > 0 ? 'bg-indigo-50 border-indigo-500' : 'bg-white border-slate-100 text-slate-300'
-                                 ]">
+                                 :class="['h-14 rounded-lg flex flex-col items-center justify-center relative transition border cursor-pointer select-none', d.qty > 0 ? 'bg-indigo-50 border-indigo-500' : 'bg-white border-slate-100 text-slate-300']">
                                 <span class="text-xs font-bold">{{ d.dateStr }}</span>
                                 <span class="text-[10px] scale-90">{{ d.dayStr }}</span>
-                                
-                                <div v-if="d.qty > 0" class="qty-badge absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 bg-indigo-600 text-white rounded-full flex items-center justify-center text-[10px] font-bold shadow-sm z-10">
-                                    {{ d.qty }}
-                                </div>
+                                <div v-if="d.qty > 0" class="qty-badge absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 bg-indigo-600 text-white rounded-full flex items-center justify-center text-[10px] font-bold shadow-sm z-10">{{ d.qty }}</div>
                             </div>
                         </div>
                     </div>
@@ -201,9 +199,8 @@
                 </div>
                 <div class="flex gap-2">
                     <button v-if="editMode" @click="cancelEdit" class="bg-slate-100 text-slate-500 px-4 py-3 rounded-xl font-bold text-sm">取消</button>
-                    <button @click="saveOrder" :disabled="isSaving || totalCount === 0" 
-                        class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-200 active:scale-95 transition disabled:bg-slate-300 flex items-center gap-2">
-                        <span v-if="!isSaving">{{ editMode ? '確認修改' : '儲存訂單' }}</span>
+                    <button @click="saveOrder" :disabled="isSaving || totalCount === 0" class="btn-press bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-200 disabled:bg-slate-300 flex items-center gap-2">
+                        <span v-if="!isSaving">{{ editMode ? '確認' : '儲存' }}</span>
                         <span v-else><i class="fas fa-spinner fa-spin"></i></span>
                     </button>
                 </div>
@@ -212,16 +209,13 @@
 
         <nav class="bg-white border-t border-slate-200 safe-bottom flex justify-around items-center py-2 z-40 shrink-0">
             <button @click="switchTab('stats')" :class="['flex flex-col items-center p-2 w-1/3 transition', currentTab === 'stats' ? 'text-purple-600' : 'text-slate-400']">
-                <i class="fas fa-chart-pie text-xl mb-1"></i>
-                <span class="text-[10px] font-bold">統計報告</span>
+                <i class="fas fa-chart-pie text-xl mb-1"></i><span class="text-[10px] font-bold">統計</span>
             </button>
             <button @click="switchTab('list')" :class="['flex flex-col items-center p-2 w-1/3 transition', currentTab === 'list' ? 'text-blue-600' : 'text-slate-400']">
-                <i class="fas fa-list-ul text-xl mb-1"></i>
-                <span class="text-[10px] font-bold">訂單管理</span>
+                <i class="fas fa-list-ul text-xl mb-1"></i><span class="text-[10px] font-bold">列表</span>
             </button>
             <button @click="switchTab('create')" :class="['flex flex-col items-center p-2 w-1/3 transition', currentTab === 'create' ? 'text-indigo-600' : 'text-slate-400']">
-                <i class="fas fa-plus-circle text-xl mb-1"></i>
-                <span class="text-[10px] font-bold">新增/修改</span>
+                <i class="fas fa-plus-circle text-xl mb-1"></i><span class="text-[10px] font-bold">新增</span>
             </button>
         </nav>
 
@@ -247,39 +241,77 @@
 
         createApp({
             setup() {
-                // UI & State
-                const currentTab = ref('list');
+                const currentTab = ref('stats'); // 預設首頁為統計，避免看到空列表
                 const loading = ref(true);
                 const isSaving = ref(false);
                 const editMode = ref(false); 
                 const currentOrderId = ref(null);
-                
                 const openGroups = reactive({});
                 const dayMap = { 1: '一', 2: '二', 5: '五' };
-                const statusOptions = ['暫時儲存', '登記出帳', '確認入帳']; // 新增狀態
+                const statusOptions = ['暫時儲存', '登記出帳', '確認入帳'];
                 
-                // Data
                 const orders = ref([]);
                 const savedCustomers = ref([]);
                 const dateList = ref([]); 
 
-                // Form Data
                 const form = reactive({
-                    customerName: '',
-                    area: '',
-                    unitPrice: 35,
-                    status: '暫時儲存', // 預設狀態
-                    selectedDays: [1] 
+                    customerName: '', area: '', unitPrice: 35, status: '暫時儲存', selectedDays: [1] 
                 });
 
-                // --- 1. 日期邏輯 ---
+                // --- 模擬資料生成邏輯 (Mock Data) ---
+                const createMockData = async () => {
+                    isSaving.value = true;
+                    const mocks = [
+                        { name: '王小明', area: '三峽', price: 35, status: '暫時儲存', days: [1] },
+                        { name: '李淑芬', area: '北大特區', price: 38, status: '登記出帳', days: [1, 2] },
+                        { name: '美而美早餐', area: '商業區', price: 30, status: '確認入帳', days: [1, 2, 5] }
+                    ];
+
+                    try {
+                        for (const m of mocks) {
+                            // 模擬隨機日期
+                            const mockDates = {};
+                            const count = Math.floor(Math.random() * 10) + 5; // 隨機 5~15 天
+                            let totalQ = 0;
+                            // 簡單生成幾個日期 key
+                            for(let i=0; i<count; i++) {
+                                const d = new Date(2025, 0, i+1); // 1月開始
+                                if(m.days.includes(d.getDay())) {
+                                    const dateKey = `2025/01/${(i+1).toString().padStart(2,'0')}`;
+                                    const q = Math.random() > 0.8 ? 2 : (Math.random() > 0.8 ? 0.5 : 1); // 大部分是1
+                                    mockDates[dateKey] = q;
+                                    totalQ += q;
+                                }
+                            }
+                            
+                            const payload = {
+                                customerName: m.name, area: m.area, unitPrice: m.price, status: m.status, selectedDays: m.days,
+                                totalAmount: Math.floor(totalQ * m.price), totalCount: totalQ,
+                                dates: mockDates, createdAt: new Date().toISOString()
+                            };
+                            
+                            await push(dbRef(db, 'orders'), payload);
+                            // 順便存入客戶庫
+                            const key = btoa(encodeURIComponent(m.name)).replace(/[^a-zA-Z0-9]/g, '');
+                            await update(dbRef(db, `customers/${key}`), { name: m.name, area: m.area, unitPrice: m.price });
+                        }
+                        alert('✨ 成功生成 3 筆模擬資料！');
+                        switchTab('list'); // 跳轉到列表看結果
+                    } catch(e) {
+                        alert('生成失敗:' + e.message);
+                    } finally {
+                        isSaving.value = false;
+                    }
+                };
+
+                const switchToCreate = () => { resetForm(); switchTab('create'); };
+
+                // ... (其餘邏輯保持不變: generateDates, toggleDateQty, CRUD...)
                 const generateDates = () => {
                     const tempDates = [];
                     const start = new Date(2024, 11, 1);
                     const end = new Date(2025, 11, 31);
                     const activeDays = new Set(form.selectedDays); 
-                    
-                    // 保留既有數值
                     const existingMap = new Map();
                     dateList.value.forEach(d => { if(d.qty > 0) existingMap.set(d.fullDate, d.qty); });
 
@@ -291,208 +323,67 @@
                             const dd = d.getDate().toString().padStart(2, '0');
                             const fDate = `${y}/${m}/${dd}`;
                             tempDates.push({
-                                fullDate: fDate,
-                                monthGroup: `${y}年 ${m}月`,
-                                dateStr: `${m}/${dd}`,
-                                dayStr: dayMap[day],
+                                fullDate: fDate, monthGroup: `${y}年 ${m}月`, dateStr: `${m}/${dd}`, dayStr: dayMap[day],
                                 qty: existingMap.get(fDate) || 0 
                             });
                         }
                     }
                     dateList.value = tempDates;
-                    if(tempDates.length > 0 && Object.keys(openGroups).length === 0) {
-                        openGroups[tempDates[0].monthGroup] = true;
-                    }
+                    if(tempDates.length > 0 && Object.keys(openGroups).length === 0) openGroups[tempDates[0].monthGroup] = true;
                 };
 
-                // --- 2. 數量切換邏輯 (0.5, 1, 1.5, 2) ---
                 const toggleDateQty = (d) => {
-                    // 循環順序: 0 -> 1 -> 1.5 -> 2 -> 0.5 -> 0 (最常用的 1 瓶放前面)
-                    if (d.qty === 0) d.qty = 1;
-                    else if (d.qty === 1) d.qty = 1.5;
-                    else if (d.qty === 1.5) d.qty = 2;
-                    else if (d.qty === 2) d.qty = 0.5; // 半瓶
-                    else if (d.qty === 0.5) d.qty = 0;
-                    else d.qty = 0; // fallback
+                    if (d.qty === 0) d.qty = 1; else if (d.qty === 1) d.qty = 1.5; else if (d.qty === 1.5) d.qty = 2; else if (d.qty === 2) d.qty = 0.5; else d.qty = 0;
                 };
 
-                // --- 3. 批次操作 (全月/全年) ---
-                const toggleMonthAll = (group) => {
-                    // 判斷該月目前是否都已有數量？如果有，則全清空；否則全設為 1
-                    const hasItems = group.some(d => d.qty > 0);
-                    group.forEach(d => d.qty = hasItems ? 0 : 1);
-                };
+                const toggleMonthAll = (group) => { const has = group.some(d=>d.qty>0); group.forEach(d=>d.qty=has?0:1); };
+                const toggleAllYear = () => { if(dateList.value.length===0)return; const has=dateList.value.some(d=>d.qty>0); if(confirm(has?'清除全年?':'填滿全年?')) dateList.value.forEach(d=>d.qty=has?0:1); };
 
-                const toggleAllYear = () => {
-                    // 全年邏輯與全月類似，針對顯示中的所有日期
-                    if(dateList.value.length === 0) return;
-                    const hasItems = dateList.value.some(d => d.qty > 0);
-                    const confirmMsg = hasItems ? '確定要清除全年所有數量嗎？' : '確定要自動填滿全年 (每瓶1單位) 嗎？';
-                    
-                    if(confirm(confirmMsg)) {
-                        dateList.value.forEach(d => d.qty = hasItems ? 0 : 1);
-                    }
-                };
-
-                // --- 4. 自動帶入 ---
-                const onNameInput = () => {
-                    const found = savedCustomers.value.find(c => c.name === form.customerName);
-                    if (found) {
-                        form.area = found.area || '';
-                        form.unitPrice = found.unitPrice || 35;
-                    }
-                };
-
-                // --- 5. CRUD ---
                 const saveOrder = async () => {
                     if (!form.customerName) { alert('請輸入姓名'); return; }
                     isSaving.value = true;
                     const activeDates = dateList.value.filter(d => d.qty > 0);
-                    
                     const payload = {
-                        customerName: form.customerName,
-                        area: form.area,
-                        unitPrice: form.unitPrice,
-                        status: form.status, // 儲存狀態
-                        selectedDays: form.selectedDays,
-                        totalAmount: totalAmount.value,
-                        totalCount: totalCount.value, // 這會是 float (例如 10.5)
-                        dates: activeDates.reduce((acc, curr) => {
-                            acc[curr.fullDate] = curr.qty;
-                            return acc;
-                        }, {}),
+                        customerName: form.customerName, area: form.area, unitPrice: form.unitPrice, status: form.status, selectedDays: form.selectedDays,
+                        totalAmount: totalAmount.value, totalCount: totalCount.value,
+                        dates: activeDates.reduce((acc, curr) => { acc[curr.fullDate] = curr.qty; return acc; }, {}),
                         updatedAt: new Date().toISOString()
                     };
-
                     try {
-                        if (editMode.value && currentOrderId.value) {
-                            await update(dbRef(db, `orders/${currentOrderId.value}`), payload);
-                        } else {
-                            payload.createdAt = new Date().toISOString();
-                            await push(dbRef(db, 'orders'), payload);
-                        }
-                        
-                        // 更新顧客庫
-                        const customerKey = btoa(encodeURIComponent(form.customerName)).replace(/[^a-zA-Z0-9]/g, '');
-                        await update(dbRef(db, `customers/${customerKey}`), {
-                            name: form.customerName,
-                            area: form.area,
-                            unitPrice: form.unitPrice
-                        });
-
-                        alert('✅ 資料寫入成功');
-                        resetForm();
-                        switchTab('list');
-                    } catch (e) {
-                        alert('錯誤：' + e.message);
-                    } finally {
-                        isSaving.value = false;
-                    }
+                        if (editMode.value && currentOrderId.value) await update(dbRef(db, `orders/${currentOrderId.value}`), payload);
+                        else { payload.createdAt = new Date().toISOString(); await push(dbRef(db, 'orders'), payload); }
+                        const key = btoa(encodeURIComponent(form.customerName)).replace(/[^a-zA-Z0-9]/g, '');
+                        await update(dbRef(db, `customers/${key}`), { name: form.customerName, area: form.area, unitPrice: form.unitPrice });
+                        alert('✅ 儲存成功'); resetForm(); switchTab('list');
+                    } catch (e) { alert(e.message); } finally { isSaving.value = false; }
                 };
-
-                const editOrder = (order) => {
-                    editMode.value = true;
-                    currentOrderId.value = order.id;
-                    form.customerName = order.customerName;
-                    form.area = order.area || '';
-                    form.unitPrice = order.unitPrice;
-                    form.status = order.status || '暫時儲存';
-                    form.selectedDays = order.selectedDays || [1];
-                    generateDates();
-                    if (order.dates) {
-                        dateList.value.forEach(d => {
-                            d.qty = order.dates[d.fullDate] || 0;
-                        });
-                    }
-                    switchTab('create');
-                };
-
-                const deleteOrder = (id) => { if(confirm('刪除訂單？')) remove(dbRef(db, `orders/${id}`)); };
                 
+                // ... CRUD helpers ...
+                const onNameInput = () => { const f=savedCustomers.value.find(c=>c.name===form.customerName); if(f){form.area=f.area||'';form.unitPrice=f.unitPrice||35;} };
+                const editOrder = (o) => { editMode.value=true; currentOrderId.value=o.id; form.customerName=o.customerName; form.area=o.area||''; form.unitPrice=o.unitPrice; form.status=o.status||'暫時儲存'; form.selectedDays=o.selectedDays||[1]; generateDates(); if(o.dates)dateList.value.forEach(d=>d.qty=o.dates[d.fullDate]||0); switchTab('create'); };
+                const deleteOrder = (id) => { if(confirm('刪除?')) remove(dbRef(db, `orders/${id}`)); };
                 const cancelEdit = () => { resetForm(); switchTab('list'); };
-                const resetForm = () => {
-                    form.customerName = ''; form.area = ''; form.unitPrice = 35; 
-                    form.status = '暫時儲存'; form.selectedDays = [1];
-                    editMode.value = false; currentOrderId.value = null; generateDates();
-                };
-
-                // --- 6. 統計與顯示 ---
-                const switchTab = (tab) => {
-                    currentTab.value = tab;
-                    if(tab === 'create' && dateList.value.length === 0) generateDates();
-                };
+                const resetForm = () => { form.customerName=''; form.area=''; form.unitPrice=35; form.status='暫時儲存'; form.selectedDays=[1]; editMode.value=false; currentOrderId.value=null; generateDates(); };
+                const switchTab = (t) => { currentTab.value=t; if(t==='create'&&dateList.value.length===0)generateDates(); };
 
                 onMounted(() => {
-                    onValue(dbRef(db, 'orders'), (snap) => {
-                        const data = snap.val();
-                        orders.value = data ? Object.entries(data).map(([k, v]) => ({id: k, ...v})) : [];
-                        loading.value = false;
-                    });
-                    onValue(dbRef(db, 'customers'), (snap) => {
-                        savedCustomers.value = snap.val() ? Object.values(snap.val()) : [];
-                    });
+                    onValue(dbRef(db, 'orders'), (s) => { const d=s.val(); orders.value=d?Object.entries(d).map(([k,v])=>({id:k,...v})):[]; loading.value=false; });
+                    onValue(dbRef(db, 'customers'), (s) => { savedCustomers.value=s.val()?Object.values(s.val()):[]; });
                     generateDates();
                 });
 
-                // Computed
-                const groupedDates = computed(() => dateList.value.reduce((acc, curr) => {
-                    if (!acc[curr.monthGroup]) acc[curr.monthGroup] = [];
-                    acc[curr.monthGroup].push(curr);
-                    return acc;
-                }, {}));
-                
-                const groupTotal = (group) => group.reduce((sum, d) => sum + d.qty, 0);
-                const totalCount = computed(() => dateList.value.reduce((sum, d) => sum + d.qty, 0));
+                const groupedDates = computed(() => dateList.value.reduce((acc, c) => { if(!acc[c.monthGroup])acc[c.monthGroup]=[]; acc[c.monthGroup].push(c); return acc; }, {}));
+                const groupTotal = (g) => g.reduce((s, d) => s + d.qty, 0);
+                const totalCount = computed(() => dateList.value.reduce((s, d) => s + d.qty, 0));
                 const totalAmount = computed(() => Math.floor(totalCount.value * form.unitPrice));
-                const sortedOrders = computed(() => [...orders.value].sort((a,b) => new Date(b.updatedAt||b.createdAt) - new Date(a.updatedAt||a.createdAt)));
-
-                // 統計數據 (Dashboard Stats)
-                const stats = computed(() => {
-                    const s = {
-                        totalRevenue: 0, totalOrders: orders.value.length, totalBottles: 0,
-                        countSave: 0, amtSave: 0,
-                        countBilled: 0, amtBilled: 0,
-                        countPaid: 0, amtPaid: 0
-                    };
-                    orders.value.forEach(o => {
-                        s.totalRevenue += (o.totalAmount || 0);
-                        s.totalBottles += (o.totalCount || 0);
-                        
-                        if(o.status === '暫時儲存') { s.countSave++; s.amtSave += o.totalAmount; }
-                        else if(o.status === '登記出帳') { s.countBilled++; s.amtBilled += o.totalAmount; }
-                        else if(o.status === '確認入帳') { s.countPaid++; s.amtPaid += o.totalAmount; }
-                    });
-                    return s;
-                });
+                const sortedOrders = computed(() => [...orders.value].sort((a,b) => new Date(b.updatedAt||b.createdAt)-new Date(a.updatedAt||a.createdAt)));
+                const stats = computed(() => { const s={totalRevenue:0,totalOrders:orders.value.length,totalBottles:0,countSave:0,amtSave:0,countBilled:0,amtBilled:0,countPaid:0,amtPaid:0}; orders.value.forEach(o=>{ s.totalRevenue+=(o.totalAmount||0); s.totalBottles+=(o.totalCount||0); if(o.status==='暫時儲存'){s.countSave++;s.amtSave+=o.totalAmount;}else if(o.status==='登記出帳'){s.countBilled++;s.amtBilled+=o.totalAmount;}else if(o.status==='確認入帳'){s.countPaid++;s.amtPaid+=o.totalAmount;} }); return s; });
+                const getStatusClass = (s) => s==='登記出帳'?'status-billed':(s==='確認入帳'?'status-paid':'status-save');
                 
-                const recentOrders = computed(() => sortedOrders.value.slice(0, 5));
-
-                // Helper
-                const getStatusClass = (st) => {
-                    if(st === '登記出帳') return 'status-billed';
-                    if(st === '確認入帳') return 'status-paid';
-                    return 'status-save';
-                };
-                const formatTime = (iso) => {
-                    const d = new Date(iso);
-                    return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${d.getMinutes()}`;
-                };
-
                 return {
-                    pageTitle: computed(() => {
-                        if(currentTab.value==='stats') return '統計儀表板';
-                        if(currentTab.value==='list') return '訂單管理';
-                        return editMode.value ? '修改訂單' : '新增訂單';
-                    }),
-                    currentTab, loading, isSaving, editMode, switchTab,
-                    form, savedCustomers, statusOptions, onNameInput,
-                    dayMap, generateDates, toggleDateQty,
-                    groupedDates, openGroups, toggleGroup: (k)=>openGroups[k]=!openGroups[k],
-                    groupTotal, toggleMonthAll, toggleAllYear,
-                    totalCount, totalAmount, sortedOrders,
-                    saveOrder, editOrder, deleteOrder, cancelEdit,
-                    stats, recentOrders, getStatusClass, formatTime,
-                    uniqueAreas: computed(() => [...new Set(savedCustomers.value.map(c => c.area).filter(Boolean))])
+                    pageTitle: computed(() => currentTab.value==='stats'?'統計儀表板':(currentTab.value==='list'?'訂單列表':(editMode.value?'修改訂單':'新增訂單'))),
+                    currentTab, loading, isSaving, editMode, switchTab, form, savedCustomers, statusOptions, onNameInput, dayMap, generateDates, toggleDateQty, groupedDates, openGroups, toggleGroup:(k)=>openGroups[k]=!openGroups[k], groupTotal, toggleMonthAll, toggleAllYear, totalCount, totalAmount, sortedOrders, saveOrder, editOrder, deleteOrder, cancelEdit, stats, getStatusClass, uniqueAreas: computed(()=>[...new Set(savedCustomers.value.map(c=>c.area).filter(Boolean))]),
+                    createMockData, switchToCreate // New functions
                 };
             }
         }).mount('#app');
