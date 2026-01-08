@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>羊奶 CRM (v3.5.3.exp)</title>
+    <title>羊奶 CRM (v3.5.4.exp)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -20,7 +20,7 @@
         }
         
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 99px; }
         .custom-scroll:hover::-webkit-scrollbar-thumb { background: #a8a29e; }
@@ -30,35 +30,35 @@
 
         /* 標籤微型化 */
         .status-badge { @apply px-1.5 py-0.5 rounded text-[9px] font-bold border leading-none; }
-        .status-save { @apply bg-stone-100 text-stone-500 border-stone-200; }
-        .status-notified { @apply bg-amber-50 text-amber-600 border-amber-200; }
-        .status-billed { @apply bg-blue-50 text-blue-600 border-blue-200; }
-        .status-paid { @apply bg-emerald-50 text-emerald-600 border-emerald-200; }
+        .status-save { @apply bg-stone-100 text-stone-600 border-stone-300; }
+        .status-notified { @apply bg-amber-50 text-amber-700 border-amber-300; }
+        .status-billed { @apply bg-blue-50 text-blue-700 border-blue-300; }
+        .status-paid { @apply bg-emerald-50 text-emerald-700 border-emerald-300; }
 
-        .type-badge { @apply text-[9px] px-1 rounded border ml-1 opacity-80 leading-none scale-90 origin-left; }
-        .type-morning { @apply bg-orange-50 text-orange-600 border-orange-100; }
-        .type-family { @apply bg-rose-50 text-rose-600 border-rose-100; }
-        .type-group { @apply bg-violet-50 text-violet-600 border-violet-100; }
+        .type-badge { @apply text-[9px] px-1 rounded border ml-1 opacity-90 leading-none scale-90 origin-left font-bold; }
+        .type-morning { @apply bg-orange-50 text-orange-700 border-orange-200; }
+        .type-family { @apply bg-rose-50 text-rose-700 border-rose-200; }
+        .type-group { @apply bg-violet-50 text-violet-700 border-violet-200; }
 
         .glass-panel {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(231, 229, 228, 0.8);
+            border-bottom: 1px solid rgba(231, 229, 228, 1);
         }
 
         .btn-press:active { transform: scale(0.97); filter: brightness(0.95); }
-        .filter-checkbox:checked + span { @apply bg-emerald-600 text-white border-emerald-600; }
+        .filter-checkbox:checked + span { @apply bg-emerald-700 text-white border-emerald-700; }
 
-        /* 重點修改 5: 粗黑框線設計 (Heavy Input) */
+        /* 粗黑框線設計 (Heavy Input) */
         .input-heavy { 
-            @apply w-full bg-white border-2 border-stone-800 rounded px-2 py-0.5 text-xs font-bold text-stone-700 outline-none focus:bg-amber-50 transition-colors;
-            height: 26px;
-        }
-        .input-micro { 
-            @apply w-full bg-stone-50 border border-stone-200 rounded px-2 py-1 text-xs font-medium outline-none focus:border-emerald-400 focus:bg-white transition; 
+            @apply w-full bg-white border-2 border-stone-600 rounded px-2 py-0.5 text-xs font-bold text-stone-800 outline-none focus:bg-amber-50 focus:border-stone-900 transition-colors;
             height: 28px;
         }
-        .label-micro { @apply text-[9px] text-stone-400 font-bold mb-0.5 block uppercase tracking-wide; }
+        .input-micro { 
+            @apply w-full bg-stone-50 border border-stone-300 rounded px-2 py-1 text-xs font-bold text-stone-700 outline-none focus:border-emerald-500 focus:bg-white transition; 
+            height: 30px;
+        }
+        .label-micro { @apply text-[10px] text-stone-500 font-bold mb-0.5 block uppercase tracking-wide; }
 
         .slide-enter-active, .slide-leave-active { transition: all 0.3s ease; max-height: 800px; opacity: 1; }
         .slide-enter-from, .slide-leave-to { max-height: 0; opacity: 0; padding: 0; margin: 0; }
@@ -66,39 +66,39 @@
         .fade-enter-from, .fade-leave-to { opacity: 0; }
     </style>
 </head>
-<body class="h-screen w-screen flex flex-col text-slate-800 bg-stone-50">
+<body class="h-screen w-screen flex flex-col text-slate-800 bg-stone-100">
 
     <div id="app" class="flex flex-col h-full w-full relative">
 
         <header class="glass-panel px-3 py-2 flex justify-between items-center shrink-0 z-50 h-[50px]">
-            <div @click="reloadPage" class="font-bold text-base text-stone-700 flex items-center gap-2 cursor-pointer select-none btn-press">
-                <div class="w-6 h-6 bg-emerald-100 rounded-md flex items-center justify-center text-emerald-600"><i class="fas fa-leaf text-xs"></i></div>
+            <div @click="reloadPage" class="font-bold text-base text-stone-800 flex items-center gap-2 cursor-pointer select-none btn-press">
+                <div class="w-7 h-7 bg-emerald-100 rounded-md flex items-center justify-center text-emerald-700"><i class="fas fa-leaf text-sm"></i></div>
                 <div class="flex flex-col leading-none">
-                    <span class="tracking-tight">五寮尖</span>
-                    <span class="text-[8px] text-stone-400">v3.5.3.exp</span>
+                    <span class="tracking-tight text-sm">五寮尖</span>
+                    <span class="text-[9px] text-stone-500">v3.5.4</span>
                 </div>
             </div>
             
             <div class="flex gap-1 items-center">
-                <button @click="settingsModal.show = true" class="w-7 h-7 rounded hover:bg-stone-100 text-stone-500 transition flex items-center justify-center mr-1" title="假日設定">
-                    <i class="fas fa-cog text-xs"></i>
+                <button @click="settingsModal.show = true" class="w-8 h-8 rounded hover:bg-stone-200 text-stone-600 transition flex items-center justify-center mr-1" title="假日設定">
+                    <i class="fas fa-cog text-sm"></i>
                 </button>
 
-                <div v-if="currentTab === 'list'" class="flex bg-stone-100 rounded p-0.5 mr-1">
-                    <button @click="triggerImport" class="w-6 h-6 rounded hover:bg-white text-stone-500 text-[10px] transition"><i class="fas fa-file-import"></i></button>
-                    <button @click="exportData" class="w-6 h-6 rounded hover:bg-white text-stone-500 text-[10px] transition"><i class="fas fa-file-export"></i></button>
+                <div v-if="currentTab === 'list'" class="flex bg-stone-200 rounded p-0.5 mr-1">
+                    <button @click="triggerImport" class="w-7 h-7 rounded hover:bg-white text-stone-600 text-xs transition"><i class="fas fa-file-import"></i></button>
+                    <button @click="exportData" class="w-7 h-7 rounded hover:bg-white text-stone-600 text-xs transition"><i class="fas fa-file-export"></i></button>
                     <input type="file" ref="fileInput" class="hidden" @change="handleImport" accept=".json">
                 </div>
 
-                <button v-if="currentTab === 'create'" @click="saveOrder" :disabled="isSaving" class="btn-press bg-emerald-600 text-white px-3 py-1.5 rounded text-xs font-bold shadow-sm hover:bg-emerald-700 transition flex items-center gap-1 disabled:opacity-50">
+                <button v-if="currentTab === 'create'" @click="saveOrder" :disabled="isSaving" class="btn-press bg-emerald-600 text-white px-4 py-1.5 rounded text-xs font-bold shadow-sm hover:bg-emerald-700 transition flex items-center gap-1 disabled:opacity-50">
                     <i class="fas fa-save"></i> 儲存
                 </button>
 
-                <button v-if="currentTab === 'list'" @click="switchToCreate" class="btn-press bg-emerald-600 text-white w-7 h-7 rounded flex items-center justify-center shadow-sm hover:bg-emerald-700 transition">
-                    <i class="fas fa-plus text-xs"></i>
+                <button v-if="currentTab === 'list'" @click="switchToCreate" class="btn-press bg-emerald-600 text-white w-8 h-8 rounded flex items-center justify-center shadow-sm hover:bg-emerald-700 transition">
+                    <i class="fas fa-plus"></i>
                 </button>
-                <button v-if="currentTab === 'create'" @click="switchTab('list')" class="btn-press bg-white border border-stone-200 text-stone-500 w-7 h-7 rounded flex items-center justify-center hover:bg-stone-50 transition">
-                    <i class="fas fa-times text-xs"></i>
+                <button v-if="currentTab === 'create'" @click="switchTab('list')" class="btn-press bg-white border border-stone-300 text-stone-600 w-8 h-8 rounded flex items-center justify-center hover:bg-stone-100 transition">
+                    <i class="fas fa-times"></i>
                 </button>
             </div>
         </header>
@@ -106,34 +106,34 @@
         <main class="flex-1 overflow-hidden relative flex flex-col">
 
             <div v-if="currentTab === 'list'" class="flex-1 flex flex-col overflow-y-auto custom-scroll p-2">
-                <div class="flex flex-wrap gap-1 mb-2 sticky top-0 bg-stone-50/95 z-30 py-1 backdrop-blur">
+                <div class="flex flex-wrap gap-1 mb-2 sticky top-0 bg-stone-100/95 z-30 py-2 backdrop-blur border-b border-stone-200/50">
                     <label v-for="st in statusOptions" :key="st" class="cursor-pointer">
                         <input type="checkbox" :value="st" v-model="filterStatus" class="hidden filter-checkbox">
-                        <span class="px-2 py-1 rounded border border-stone-200 text-[10px] font-bold text-stone-500 bg-white transition select-none hover:border-emerald-300">
+                        <span class="px-2.5 py-1 rounded border border-stone-300 text-[11px] font-bold text-stone-600 bg-white transition select-none hover:border-emerald-400">
                             {{ st }}
                         </span>
                     </label>
                 </div>
 
-                <div v-if="loading" class="text-center py-20 text-stone-400 text-xs">讀取中...</div>
+                <div v-if="loading" class="text-center py-20 text-stone-500 text-sm">讀取中...</div>
                 
                 <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 pb-10">
-                    <div v-for="order in filteredOrders" :key="order.id" @click="editOrder(order)" class="bg-white rounded-lg p-2 shadow-sm border border-stone-200 relative btn-press transition hover:border-emerald-300 cursor-pointer group h-14 flex flex-col justify-between overflow-hidden">
+                    <div v-for="order in filteredOrders" :key="order.id" @click="editOrder(order)" class="bg-white rounded-lg p-2 shadow-sm border border-stone-200 relative btn-press transition hover:border-emerald-400 cursor-pointer group h-16 flex flex-col justify-between overflow-hidden">
                         <div class="flex justify-between items-center">
                             <div class="flex items-center gap-1 overflow-hidden">
-                                <h3 class="font-bold text-sm text-stone-800 truncate">{{ order.customerName }}</h3>
+                                <h3 class="font-bold text-base text-stone-800 truncate">{{ order.customerName }}</h3>
                                 <span v-if="order.type" :class="['type-badge', getTypeClass(order.type)]">{{ order.type }}</span>
                             </div>
                             <span :class="['status-badge scale-90 origin-right', getStatusClass(order.status)]">{{ order.status }}</span>
                         </div>
-                        <div class="flex items-center justify-between text-[10px] text-stone-400 border-t border-stone-50 pt-1">
+                        <div class="flex items-center justify-between text-xs text-stone-500 border-t border-stone-100 pt-1">
                             <div class="flex items-center gap-1 truncate max-w-[60%]">
-                                <span class="bg-stone-100 px-1 rounded text-stone-500 truncate">{{ order.area || '-' }}</span>
-                                <span class="font-mono text-stone-300">@{{ order.unitPrice }}</span>
+                                <span class="bg-stone-100 px-1.5 rounded text-stone-600 truncate font-medium">{{ order.area || '-' }}</span>
+                                <span class="font-mono text-stone-400 font-bold">@{{ order.unitPrice }}</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="text-emerald-600 font-bold">${{ order.totalAmount }}</span>
-                                <span class="text-[8px] bg-stone-100 text-stone-400 px-1 rounded-full">{{ formatDateRange(order.dates) }}</span>
+                                <span class="text-emerald-700 font-bold text-sm">${{ order.totalAmount }}</span>
+                                <span class="text-[9px] bg-stone-100 text-stone-500 px-1 rounded-full">{{ formatDateRange(order.dates) }}</span>
                             </div>
                         </div>
                     </div>
@@ -142,16 +142,16 @@
 
             <div v-if="currentTab === 'create'" class="flex-1 flex flex-col lg:flex-row overflow-hidden">
                 
-                <div class="w-full lg:w-[280px] bg-white border-r border-stone-200 h-full flex flex-col z-20 shadow-lg lg:shadow-none overflow-hidden">
+                <div class="w-full lg:w-[300px] bg-white border-r border-stone-200 h-full flex flex-col z-20 shadow-lg lg:shadow-none overflow-hidden">
                     <div class="flex-1 overflow-y-auto custom-scroll p-3 space-y-3">
                         
-                        <div class="bg-stone-50/50 rounded-lg border border-stone-200 p-2.5">
+                        <div class="bg-stone-50 rounded-lg border border-stone-200 p-3">
                             <div class="flex items-center gap-1 mb-2">
-                                <i class="fas fa-user-circle text-stone-400 text-xs"></i>
-                                <span class="text-[10px] font-bold text-stone-500 uppercase">基本資料</span>
+                                <i class="fas fa-user-circle text-stone-500 text-sm"></i>
+                                <span class="text-xs font-bold text-stone-700 uppercase">基本資料</span>
                             </div>
                             <div class="space-y-2">
-                                <input type="text" v-model="form.customerName" @input="onNameInput" list="customer-list" class="w-full bg-white border border-stone-300 rounded px-2 py-1.5 text-sm font-bold focus:border-emerald-500 outline-none" placeholder="顧客姓名">
+                                <input type="text" v-model="form.customerName" @input="onNameInput" list="customer-list" class="w-full bg-white border-2 border-stone-300 rounded px-2 py-1.5 text-base font-bold focus:border-emerald-500 outline-none text-stone-800" placeholder="顧客姓名">
                                 <datalist id="customer-list"><option v-for="c in savedCustomers" :value="c.name"></option></datalist>
 
                                 <div class="grid grid-cols-2 gap-2">
@@ -162,91 +162,98 @@
                                     </div>
                                     <div>
                                         <label class="label-micro">單價</label>
-                                        <input type="number" v-model.number="form.unitPrice" class="input-heavy text-right">
+                                        <input type="number" v-model.number="form.unitPrice" class="input-heavy text-right text-emerald-800 font-black">
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-2 gap-2">
                                     <div><label class="label-micro">類型</label><select v-model="form.type" class="input-micro text-[10px]"><option>晨間</option><option>家庭號</option><option>團購</option></select></div>
-                                    <div><label class="label-micro">狀態</label><select v-model="form.status" class="input-micro text-[10px] text-blue-600 font-bold"><option v-for="s in statusOptions" :key="s">{{ s }}</option></select></div>
+                                    <div><label class="label-micro">狀態</label><select v-model="form.status" class="input-micro text-[10px] text-blue-700 font-bold"><option v-for="s in statusOptions" :key="s">{{ s }}</option></select></div>
                                 </div>
-                                <label class="flex items-center gap-2 cursor-pointer mt-1 bg-white p-1 rounded border border-stone-200">
-                                    <input type="checkbox" v-model="form.ignoreHolidays" class="text-purple-600 rounded focus:ring-0">
-                                    <span class="text-[10px] font-bold text-purple-600">💜 假日依然配送</span>
+                                <label class="flex items-center gap-2 cursor-pointer mt-1 bg-white p-1.5 rounded border border-stone-200 hover:border-purple-300 transition">
+                                    <input type="checkbox" v-model="form.ignoreHolidays" class="text-purple-600 rounded focus:ring-0 w-3.5 h-3.5">
+                                    <span class="text-[10px] font-bold text-purple-700">💜 假日依然配送</span>
                                 </label>
                             </div>
                         </div>
 
-                        <div class="bg-stone-50/50 rounded-lg border border-stone-200 p-2.5">
+                        <div class="bg-stone-50 rounded-lg border border-stone-200 p-3">
                             <div class="flex justify-between items-end mb-2">
-                                <span class="text-[10px] font-bold text-stone-500 uppercase"><i class="far fa-calendar-alt mr-1"></i>配送設定</span>
+                                <span class="text-xs font-bold text-stone-700 uppercase"><i class="far fa-calendar-alt mr-1"></i>配送設定</span>
                                 <div class="flex gap-1">
-                                    <button @click="setDays('weekday')" class="px-1.5 py-0.5 bg-white border rounded text-[9px] text-stone-500 hover:border-emerald-400">平日</button>
-                                    <button @click="setDays('everyday')" class="px-1.5 py-0.5 bg-white border rounded text-[9px] text-stone-500 hover:border-emerald-400">每天</button>
+                                    <button @click="setDays('weekday')" class="px-2 py-0.5 bg-white border border-stone-300 rounded text-[9px] font-bold text-stone-600 hover:border-emerald-500 hover:text-emerald-600">平日</button>
+                                    <button @click="setDays('everyday')" class="px-2 py-0.5 bg-white border border-stone-300 rounded text-[9px] font-bold text-stone-600 hover:border-emerald-500 hover:text-emerald-600">每天</button>
                                 </div>
                             </div>
-                            <div class="flex justify-between mb-2">
-                                <label v-for="d in [1,2,3,4,5,6,0]" :key="d" :class="['w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold cursor-pointer transition select-none border', form.selectedDays.includes(d) ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-stone-400 border-stone-200']">
+                            <div class="flex justify-between mb-3">
+                                <label v-for="d in [1,2,3,4,5,6,0]" :key="d" :class="['w-7 h-7 rounded-md flex items-center justify-center text-[11px] font-bold cursor-pointer transition select-none border-2', form.selectedDays.includes(d) ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-stone-400 border-stone-200 hover:border-stone-300']">
                                     <input type="checkbox" :value="d" v-model="form.selectedDays" class="hidden" @change="generateDates">
                                     {{ dayMap[d] }}
                                 </label>
                             </div>
                             <div class="flex items-center gap-1">
-                                <input type="month" v-model="dateRange.start" @change="generateDates" class="input-micro w-[45%] text-[10px] text-center">
-                                <span class="text-stone-300 text-[10px]">➜</span>
-                                <input type="month" v-model="dateRange.end" @change="generateDates" class="input-micro w-[45%] text-[10px] text-center">
+                                <input type="month" v-model="dateRange.start" @change="generateDates" class="input-micro w-[45%] text-[10px] text-center font-bold">
+                                <span class="text-stone-400 text-[10px]">➜</span>
+                                <input type="month" v-model="dateRange.end" @change="generateDates" class="input-micro w-[45%] text-[10px] text-center font-bold">
                             </div>
                         </div>
 
-                        <div class="bg-emerald-50/50 rounded-lg border border-emerald-100 p-2.5 flex flex-col flex-1">
+                        <div class="bg-emerald-50/50 rounded-lg border border-emerald-100 p-3 flex flex-col flex-1">
                             <div class="flex justify-between items-center mb-1">
-                                <div class="flex bg-white rounded p-0.5 border border-stone-100">
-                                    <button @click="copyMode='A'" :class="['text-[9px] px-2 rounded transition', copyMode==='A'?'bg-emerald-100 text-emerald-700 font-bold':'text-stone-400']">明細</button>
-                                    <button @click="copyMode='B'" :class="['text-[9px] px-2 rounded transition', copyMode==='B'?'bg-emerald-100 text-emerald-700 font-bold':'text-stone-400']">月結</button>
+                                <div class="flex bg-white rounded p-0.5 border border-stone-200 shadow-sm">
+                                    <button @click="copyMode='A'" :class="['text-[10px] px-2.5 py-0.5 rounded transition', copyMode==='A'?'bg-emerald-600 text-white font-bold':'text-stone-500']">明細</button>
+                                    <button @click="copyMode='B'" :class="['text-[10px] px-2.5 py-0.5 rounded transition', copyMode==='B'?'bg-emerald-600 text-white font-bold':'text-stone-500']">月結</button>
                                 </div>
-                                <button @click="copyBill" class="text-[9px] text-emerald-600 hover:bg-emerald-100 px-2 py-0.5 rounded transition font-bold"><i class="far fa-copy"></i> 複製</button>
+                                <button @click="copyBill" class="text-[10px] bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 px-2 py-1 rounded transition font-bold"><i class="far fa-copy"></i> 複製</button>
                             </div>
-                            <textarea readonly v-model="generatedBillText" class="w-full h-[45vh] text-[10px] font-mono bg-white border border-emerald-100 rounded p-2 text-stone-600 outline-none resize-none mb-1 shadow-inner leading-relaxed"></textarea>
+                            <textarea readonly v-model="generatedBillText" class="w-full h-[45vh] text-[11px] font-mono bg-white border border-emerald-200 rounded p-2 text-stone-700 outline-none resize-none mb-2 shadow-inner leading-relaxed"></textarea>
                             <div class="text-right">
-                                <span class="text-xs font-bold text-stone-400 mr-1">共 {{ totalCount }} 瓶</span>
-                                <span class="text-lg font-bold text-emerald-600">${{ totalAmount.toLocaleString() }}</span>
+                                <span class="text-xs font-bold text-stone-500 mr-2">共 {{ totalCount }} 瓶</span>
+                                <span class="text-xl font-extrabold text-emerald-600">${{ totalAmount.toLocaleString() }}</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="flex-1 flex flex-col h-full bg-stone-100/50 overflow-hidden">
-                    <div class="flex justify-end items-center p-2 gap-2 border-b border-stone-200 bg-white/50 backdrop-blur shrink-0">
-                         <span class="text-[10px] text-stone-400 mr-auto"><i class="fas fa-info-circle"></i> 紫點為特殊日，點擊調整</span>
-                         <button @click="openBatchModal" class="text-[10px] bg-white border border-amber-200 text-amber-600 px-3 py-1 rounded-full font-bold hover:bg-amber-50 transition shadow-sm">
+                    <div class="flex justify-end items-center p-2 gap-2 border-b border-stone-200 bg-white/80 backdrop-blur shrink-0">
+                         <span class="text-[10px] text-stone-500 font-bold mr-auto"><i class="fas fa-info-circle text-emerald-500"></i> 紫點=假日，點擊調整數量</span>
+                         <button @click="openBatchModal" class="text-[10px] bg-white border-2 border-amber-200 text-amber-700 px-3 py-1 rounded-full font-bold hover:bg-amber-50 transition shadow-sm">
                             <i class="fas fa-bolt"></i> 批次循環
                          </button>
                     </div>
                     
                     <div class="flex-1 overflow-y-auto custom-scroll p-3">
-                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                            <div v-for="(monthData, mIndex) in monthsGrid" :key="mIndex" class="bg-white border border-stone-200 rounded-lg overflow-hidden flex flex-col h-full shadow-sm hover:border-emerald-300 transition">
-                                <div class="bg-stone-50 p-1.5 text-center border-b border-stone-100 flex justify-between items-center px-2 cursor-pointer hover:bg-stone-100" @click="toggleMonth(monthData.days)">
-                                    <span class="text-[11px] font-bold text-stone-600 font-mono">{{ monthData.title }}</span>
-                                    <span v-if="monthData.total > 0" class="text-[9px] bg-emerald-100 text-emerald-700 px-1.5 rounded-full font-bold">{{ monthData.total }}</span>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                            <div v-for="(monthData, mIndex) in monthsGrid" :key="mIndex" class="bg-white border border-stone-300 rounded-xl overflow-hidden flex flex-col h-full shadow-sm hover:border-emerald-400 transition hover:shadow-md">
+                                <div class="bg-stone-100 p-2 text-center border-b border-stone-200 flex justify-between items-center px-3 cursor-pointer hover:bg-stone-200" @click="toggleMonth(monthData.days)">
+                                    <span class="text-sm font-bold text-stone-700 font-mono tracking-tight">{{ monthData.title }}</span>
+                                    <span v-if="monthData.total > 0" class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">{{ monthData.total }}</span>
                                 </div>
-                                <div class="p-1.5">
-                                    <div class="grid grid-cols-7 mb-1 text-center border-b border-stone-50 pb-1">
-                                        <span class="text-[8px] text-stone-300">日</span><span class="text-[8px] text-stone-300">一</span><span class="text-[8px] text-stone-300">二</span><span class="text-[8px] text-stone-300">三</span><span class="text-[8px] text-stone-300">四</span><span class="text-[8px] text-stone-300">五</span><span class="text-[8px] text-stone-300">六</span>
+                                <div class="p-2">
+                                    <div class="grid grid-cols-7 mb-1 text-center border-b border-stone-100 pb-1">
+                                        <span class="text-[10px] font-bold text-stone-600">一</span>
+                                        <span class="text-[10px] font-bold text-stone-600">二</span>
+                                        <span class="text-[10px] font-bold text-stone-600">三</span>
+                                        <span class="text-[10px] font-bold text-stone-600">四</span>
+                                        <span class="text-[10px] font-bold text-stone-600">五</span>
+                                        <span class="text-[10px] font-bold text-stone-600">六</span>
+                                        <span class="text-[10px] font-bold text-red-400">日</span>
                                     </div>
-                                    <div class="grid grid-cols-7 gap-px bg-stone-100 border border-stone-100 rounded overflow-hidden">
-                                        <div v-for="n in monthData.startDay" :key="'pad-'+n" class="bg-white aspect-square"></div>
+                                    <div class="grid grid-cols-7 gap-1">
+                                        <div v-for="n in monthData.startDay" :key="'pad-'+n" class="bg-transparent aspect-square"></div>
                                         <div v-for="d in monthData.days" :key="d.fullDate" 
                                              @click="d.isValid ? toggleDateQty(d) : null" 
                                              :title="d.specialReason"
-                                             :class="['aspect-square flex flex-col items-center justify-center relative transition-all duration-100',
+                                             :class="['aspect-square rounded flex flex-col items-center justify-center relative transition-all duration-100 border',
                                                 d.isValid 
-                                                    ? (d.qty > 0 ? 'bg-emerald-500 cursor-pointer z-10' : 'bg-white cursor-pointer hover:bg-stone-50')
-                                                    : 'bg-stone-50 cursor-default'
+                                                    ? (d.qty > 0 ? 'bg-emerald-500 border-emerald-600 shadow-sm cursor-pointer z-10' : 'bg-white border-stone-200 cursor-pointer hover:border-emerald-400')
+                                                    : 'bg-stone-100/50 border-transparent opacity-30 cursor-default'
                                              ]">
-                                            <div v-if="d.isSpecial" class="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-purple-500 rounded-full z-20 shadow-sm border border-white"></div>
+                                            <div v-if="d.isSpecial" class="absolute top-0.5 right-0.5 w-2 h-2 bg-purple-500 rounded-full z-20 shadow-sm border border-white"></div>
                                             
-                                            <span :class="['text-[9px] font-bold leading-none', d.qty > 0 ? 'text-white' : (d.isValid ? 'text-stone-600' : 'text-stone-200')]">{{ d.dateStr }}</span>
-                                            <div v-if="d.qty > 0" class="qty-badge absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-white text-emerald-600 rounded-full flex items-center justify-center text-[7px] font-bold shadow-sm border border-emerald-100">{{ d.qty }}</div>
+                                            <span :class="['text-[11px] font-bold leading-none', d.qty > 0 ? 'text-white' : (d.isValid ? 'text-stone-900' : 'text-stone-400')]">{{ d.dateStr }}</span>
+                                            
+                                            <div v-if="d.qty > 0" class="qty-badge absolute -bottom-1 -right-1 w-4 h-4 bg-white text-emerald-700 rounded-full flex items-center justify-center text-[9px] font-extrabold shadow-sm border border-emerald-200">{{ d.qty }}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -260,27 +267,27 @@
 
         <transition name="fade">
             <div v-if="batchModal.show" class="fixed inset-0 z-[70] flex items-center justify-center bg-stone-900/60 backdrop-blur-sm p-6" @click.self="batchModal.show = false">
-                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col">
-                    <div class="p-4 border-b border-stone-100 bg-stone-50 flex justify-between items-center">
-                        <h3 class="font-bold text-stone-700 text-sm">選擇批次修改月份</h3>
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col border border-white/50">
+                    <div class="p-4 border-b border-stone-200 bg-stone-50 flex justify-between items-center">
+                        <h3 class="font-bold text-stone-800 text-sm">選擇批次修改月份</h3>
                         <button @click="batchModal.show = false" class="text-stone-400 hover:text-stone-600"><i class="fas fa-times"></i></button>
                     </div>
                     <div class="p-4 max-h-[60vh] overflow-y-auto custom-scroll">
-                        <div class="flex justify-between mb-2 gap-2">
-                            <button @click="batchModal.selected = [...batchModal.months]" class="flex-1 bg-stone-100 text-xs py-1 rounded hover:bg-stone-200">全選</button>
-                            <button @click="batchModal.selected = []" class="flex-1 bg-stone-100 text-xs py-1 rounded hover:bg-stone-200">全取消</button>
+                        <div class="flex justify-between mb-3 gap-2">
+                            <button @click="batchModal.selected = [...batchModal.months]" class="flex-1 bg-stone-200 text-stone-700 text-xs py-1.5 rounded hover:bg-stone-300 font-bold">全選</button>
+                            <button @click="batchModal.selected = []" class="flex-1 bg-stone-100 text-stone-500 text-xs py-1.5 rounded hover:bg-stone-200 font-bold">全取消</button>
                         </div>
                         <div class="grid grid-cols-3 gap-2">
-                            <label v-for="m in batchModal.months" :key="m" class="cursor-pointer">
+                            <label v-for="m in batchModal.months" :key="m" class="cursor-pointer group">
                                 <input type="checkbox" v-model="batchModal.selected" :value="m" class="hidden peer">
-                                <div class="border border-stone-200 rounded-lg py-2 text-center text-xs font-bold text-stone-500 peer-checked:bg-amber-100 peer-checked:text-amber-700 peer-checked:border-amber-300 transition select-none">
+                                <div class="border-2 border-stone-200 rounded-lg py-2 text-center text-xs font-bold text-stone-500 peer-checked:bg-amber-50 peer-checked:text-amber-700 peer-checked:border-amber-400 transition select-none group-hover:border-stone-300">
                                     {{ m }}
                                 </div>
                             </label>
                         </div>
                     </div>
-                    <div class="p-4 bg-stone-50 border-t border-stone-100">
-                        <button @click="applyBatch" class="w-full bg-amber-500 text-white py-2 rounded-lg text-xs font-bold hover:bg-amber-600 shadow-md shadow-amber-200">執行循環</button>
+                    <div class="p-4 bg-stone-50 border-t border-stone-200">
+                        <button @click="applyBatch" class="w-full bg-amber-500 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-amber-600 shadow-md shadow-amber-100 transition transform active:scale-95">執行循環 (0 → 1 → 2 ...)</button>
                     </div>
                 </div>
             </div>
@@ -288,23 +295,23 @@
 
         <transition name="fade">
             <div v-if="settingsModal.show" class="fixed inset-0 z-[70] flex items-center justify-center bg-stone-900/60 backdrop-blur-sm p-6" @click.self="settingsModal.show = false">
-                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col h-[70vh]">
-                    <div class="p-4 border-b border-stone-100 bg-stone-50 flex justify-between items-center">
-                        <h3 class="font-bold text-stone-700 text-sm">停送日期設定 (紫色)</h3>
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col h-[70vh] border border-white/50">
+                    <div class="p-4 border-b border-stone-200 bg-stone-50 flex justify-between items-center">
+                        <h3 class="font-bold text-stone-800 text-sm">停送日期設定 (紫色)</h3>
                         <button @click="settingsModal.show = false" class="text-stone-400 hover:text-stone-600"><i class="fas fa-times"></i></button>
                     </div>
                     <div class="p-4 flex-1 overflow-y-auto custom-scroll space-y-3">
                         <div class="flex gap-2">
-                            <input type="date" v-model="newHoliday.date" class="input-micro">
-                            <input type="text" v-model="newHoliday.reason" placeholder="原因" class="input-micro">
-                            <button @click="addHoliday" class="bg-emerald-500 text-white rounded px-3 text-xs font-bold shadow-sm"><i class="fas fa-plus"></i></button>
+                            <input type="date" v-model="newHoliday.date" class="input-heavy flex-1">
+                            <input type="text" v-model="newHoliday.reason" placeholder="原因" class="input-heavy flex-1">
+                            <button @click="addHoliday" class="bg-emerald-600 text-white rounded px-3 text-xs font-bold shadow hover:bg-emerald-700"><i class="fas fa-plus"></i></button>
                         </div>
-                        <div v-for="(reason, date) in specialDays" :key="date" class="flex justify-between items-center bg-stone-50 p-2 rounded border border-stone-100">
+                        <div v-for="(reason, date) in specialDays" :key="date" class="flex justify-between items-center bg-stone-50 p-2.5 rounded-lg border border-stone-200">
                             <div>
-                                <div class="text-[10px] font-bold text-stone-600">{{ date }}</div>
-                                <div class="text-[9px] text-purple-500">{{ reason }}</div>
+                                <div class="text-[11px] font-bold text-stone-700">{{ date }}</div>
+                                <div class="text-[10px] text-purple-600 font-bold">{{ reason }}</div>
                             </div>
-                            <button @click="delete specialDays[date]" class="text-stone-300 hover:text-red-500"><i class="fas fa-trash"></i></button>
+                            <button @click="delete specialDays[date]" class="text-stone-400 hover:text-red-500"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
                 </div>
@@ -313,10 +320,13 @@
 
         <transition name="fade">
             <div v-if="modal.show" class="fixed inset-0 z-[80] flex items-center justify-center bg-stone-900/40 backdrop-blur-sm p-6" @click.self="closeModal">
-                <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-5 text-center transform transition-all scale-100 border border-white/50">
-                    <h3 class="font-bold text-base mb-2 text-stone-800">{{ modal.title }}</h3>
-                    <p class="text-xs text-stone-500 mb-5 break-all leading-relaxed">{{ modal.message }}</p>
-                    <button @click="closeModal" class="w-full bg-stone-800 text-white py-2.5 rounded-xl font-bold hover:bg-stone-900 transition text-xs">確定</button>
+                <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center transform transition-all scale-100 border border-white/50">
+                    <div :class="['w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl shadow-sm', modal.type==='error'?'bg-red-50 text-red-500':'bg-emerald-50 text-emerald-500']">
+                        <i :class="modal.type==='error'?'fas fa-exclamation':'fas fa-check'"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2 text-stone-800">{{ modal.title }}</h3>
+                    <p class="text-sm text-stone-600 mb-6 break-all leading-relaxed">{{ modal.message }}</p>
+                    <button @click="closeModal" class="w-full bg-stone-800 text-white py-3 rounded-xl font-bold hover:bg-stone-900 transition text-sm shadow-lg">確定</button>
                 </div>
             </div>
         </transition>
@@ -349,12 +359,10 @@
                 const editMode = ref(false);
                 const currentOrderId = ref(null);
                 const modal = reactive({ show: false, title: '通知', message: '處理中...', type: 'info' });
-                // ★ 批次彈窗
                 const batchModal = reactive({ show: false, months: [], selected: [] });
-                // ★ 設定彈窗 (假日)
                 const settingsModal = reactive({ show: false });
                 const newHoliday = reactive({ date: '', reason: '' });
-                // ★ 假日資料 (模擬全域設定)
+                // 預設特殊日
                 const specialDays = reactive({
                     '2025-09-17': '中秋節', '2025-10-10': '國慶日', '2025-10-31': '颱風假',
                     '2026-01-01': '元旦', '2026-02-17': '春節補假'
@@ -371,9 +379,12 @@
                 const form = reactive({ 
                     customerName: '', area: '', unitPrice: 30, 
                     status: '暫存', type: '晨間', selectedDays: [1],
-                    ignoreHolidays: false // ★ 新增：無視假日
+                    ignoreHolidays: false 
                 });
                 const quantityMap = reactive(new Map());
+                // 修改：Day Map 配合 Mon start (1=Mon ... 0=Sun)
+                // In JS getDay(): 0=Sun, 1=Mon...
+                // UI: 一(1) 二(2) ... 六(6) 日(0)
                 const dayMap = { 1: '一', 2: '二', 3: '三', 4: '四', 5: '五', 6: '六', 0: '日' };
 
                 const showModal = (t='通知', m='完成', type='success') => { modal.title = t; modal.message = m; modal.type = type; modal.show = true; };
@@ -411,8 +422,8 @@
                 };
 
                 const toSafeKey = (d) => d.replace(/\//g, '-');
-                
-                // ★ 4-6 Months Grid View Logic
+                const generateDates = () => { /* Implicit */ };
+
                 const monthsGrid = computed(() => {
                     if (!dateRange.start || !dateRange.end) return [];
                     const [sy, sm] = dateRange.start.split('-').map(Number);
@@ -430,7 +441,13 @@
                         const mStr = (m + 1).toString().padStart(2, '0');
                         const monthKey = `${y}-${mStr}`;
                         const daysInMonth = new Date(y, m + 1, 0).getDate();
-                        const firstDayOfWeek = new Date(y, m, 1).getDay();
+                        
+                        // ★ 重點修改：週一為始的 padding 計算
+                        // standard getDay(): 0=Sun, 1=Mon...
+                        // We want 0=Mon, 1=Tue ... 6=Sun
+                        // Formula: (day - 1 + 7) % 7
+                        let firstDayObj = new Date(y, m, 1).getDay();
+                        const firstDayOfWeek = (firstDayObj - 1 + 7) % 7; 
                         
                         const days = [];
                         let totalQty = 0;
@@ -438,21 +455,14 @@
                         for (let d = 1; d <= daysInMonth; d++) {
                             const dStr = d.toString().padStart(2, '0');
                             const fDate = `${y}/${mStr}/${dStr}`;
-                            const fDateDash = `${y}-${mStr}-${dStr}`; // Key for specialDays
+                            const fDateDash = `${y}-${mStr}-${dStr}`;
                             const dayOfWeek = new Date(y, m, d).getDay();
                             
                             const isValid = activeDays.has(dayOfWeek);
-                            const isSpecial = !!specialDays[fDateDash]; // ★ Check Special
+                            const isSpecial = !!specialDays[fDateDash];
                             const specialReason = specialDays[fDateDash];
 
-                            // ★ Auto 0 if special and not ignored
                             let qty = quantityMap.get(fDate) || 0;
-                            // Note: logic implies we set qty, but strictly we just read here.
-                            // However, visually user should see what's happening.
-                            // If isSpecial and !ignoreHolidays, maybe we shouldn't count it?
-                            // But better to let user manually toggle or batch set.
-                            // Here we just mark it visually.
-                            
                             if (isValid) totalQty += qty;
 
                             const dateObj = new Date(y, m, d);
@@ -491,7 +501,6 @@
 
                 const openBatchModal = () => {
                     batchModal.months = monthsGrid.value.map(m => m.title);
-                    // ★ Default Select 9-12
                     batchModal.selected = batchModal.months.filter(m => {
                         const mo = parseInt(m.split('-')[1]);
                         return mo >= 9 && mo <= 12;
@@ -515,11 +524,8 @@
                     monthsGrid.value.forEach(m => {
                         if (targets.has(m.title)) {
                             m.days.forEach(d => { 
-                                // ★ Skip special days if not ignored
                                 if(d.isValid) {
                                     if(d.isSpecial && !form.ignoreHolidays) {
-                                        // Do nothing or set 0? Usually keep as is or set 0. 
-                                        // Let's set 0 for safety on holidays.
                                         quantityMap.set(d.fullDate, 0);
                                     } else {
                                         quantityMap.set(d.fullDate, n); 
@@ -607,7 +613,7 @@
                             customerName: form.customerName, area: form.area, unitPrice: form.unitPrice,
                             status: form.status, type: form.type, selectedDays: form.selectedDays,
                             totalAmount: totalAmount.value, totalCount: totalCount.value, dates: datesObj, updatedAt: new Date().toISOString(),
-                            ignoreHolidays: form.ignoreHolidays // Save Setting
+                            ignoreHolidays: form.ignoreHolidays 
                         };
                         if (editMode.value && currentOrderId.value) await update(dbRef(db, `orders/${currentOrderId.value}`), payload);
                         else { payload.createdAt = new Date().toISOString(); await push(dbRef(db, 'orders'), payload); }
