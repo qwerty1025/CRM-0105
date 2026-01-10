@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>羊奶 CRM (v3.5.8.exp)</title>
+    <title>羊奶 CRM (v3.5.10.exp)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -13,14 +13,14 @@
     <style>
         body { 
             font-family: 'M PLUS Rounded 1c', sans-serif; 
-            background-color: #fdfcf8; 
+            background-color: #f5f5f4; 
             color: #44403c;
             height: 100vh;
             overflow: hidden;
         }
         
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 99px; }
         .custom-scroll:hover::-webkit-scrollbar-thumb { background: #a8a29e; }
@@ -28,42 +28,47 @@
         .qty-badge { transition: transform 0.1s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 10; }
         .qty-badge:active { transform: scale(1.3); }
 
-        /* 標籤微型化 */
-        .status-badge { @apply px-1.5 py-0.5 rounded text-[9px] font-bold border leading-none; }
+        /* 標籤微型化 v3.5.10 */
+        .status-badge { @apply px-1.5 py-0.5 rounded text-[9px] font-bold border leading-none shadow-sm; }
         .status-save { @apply bg-stone-100 text-stone-500 border-stone-200; }
         .status-notified { @apply bg-amber-50 text-amber-600 border-amber-200; }
         .status-billed { @apply bg-blue-50 text-blue-600 border-blue-200; }
         .status-paid { @apply bg-emerald-50 text-emerald-600 border-emerald-200; }
 
-        .type-badge { @apply text-[9px] px-1 rounded border ml-1 opacity-80 leading-none scale-90 origin-left font-bold; }
-        .type-morning { @apply bg-orange-50 text-orange-600 border-orange-100; }
-        .type-family { @apply bg-rose-50 text-rose-600 border-rose-100; }
-        .type-group { @apply bg-violet-50 text-violet-600 border-violet-100; }
+        /* 類型燈號化 */
+        .dot-type { @apply w-2 h-2 rounded-full shadow-sm ring-1 ring-white; }
+        .dot-morning { @apply bg-orange-400; }
+        .dot-family { @apply bg-rose-400; }
+        .dot-group { @apply bg-violet-400; }
 
         .glass-panel {
-            background: rgba(255, 255, 255, 0.98);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(231, 229, 228, 1);
         }
 
         .btn-press:active { transform: scale(0.97); filter: brightness(0.95); }
-        .filter-checkbox:checked + span { @apply bg-emerald-700 text-white border-emerald-700; }
+        
+        /* 看板模式欄位 */
+        .kanban-col {
+            @apply flex-shrink-0 w-80 flex flex-col bg-stone-200/60 rounded-xl overflow-hidden border border-stone-200 max-h-full transition-colors;
+        }
+        .kanban-col:hover { @apply bg-stone-200/80 border-stone-300; }
 
-        /* 粗黑框線設計 (Heavy Input) */
+        /* 輸入框樣式 */
         .input-heavy { 
             @apply w-full bg-white border-2 border-stone-700 rounded px-1.5 py-0 text-[10px] font-extrabold text-stone-800 outline-none focus:bg-amber-50 focus:border-stone-900 transition-colors tracking-wide;
             height: 24px;
         }
-        /* 極簡標籤 (淡化) */
-        .label-minimal { @apply text-[8px] text-stone-300 font-bold mb-0.5 block uppercase tracking-wider; }
+        .label-minimal { @apply text-[7px] text-stone-400 font-bold mb-0.5 block uppercase tracking-wider scale-95 origin-left; } /* 調整更小 */
 
         .input-micro { 
             @apply w-full bg-stone-50 border border-stone-300 rounded px-1.5 py-0.5 text-[10px] font-bold text-stone-700 outline-none focus:border-emerald-500 focus:bg-white transition; 
             height: 24px;
         }
 
-        .slide-enter-active, .slide-leave-active { transition: all 0.3s ease; max-height: 800px; opacity: 1; }
-        .slide-enter-from, .slide-leave-to { max-height: 0; opacity: 0; padding: 0; margin: 0; }
+        .slide-enter-active, .slide-leave-active { transition: all 0.3s ease; }
+        .slide-enter-from, .slide-leave-to { transform: translateX(100%); opacity: 0; }
         .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease-out; }
         .fade-enter-from, .fade-leave-to { opacity: 0; }
     </style>
@@ -72,189 +77,254 @@
 
     <div id="app" class="flex flex-col h-full w-full relative">
 
-        <header class="glass-panel px-3 py-2 flex justify-between items-center shrink-0 z-50 h-[50px]">
-            <div @click="reloadPage" class="font-bold text-base text-stone-800 flex items-center gap-2 cursor-pointer select-none btn-press">
-                <div class="w-7 h-7 bg-emerald-100 rounded-md flex items-center justify-center text-emerald-700"><i class="fas fa-leaf text-sm"></i></div>
+        <header class="glass-panel px-4 py-2 flex justify-between items-center shrink-0 z-50 h-[56px] shadow-sm">
+            <div @click="reloadPage" class="font-bold text-base text-stone-800 flex items-center gap-2 cursor-pointer select-none btn-press group">
+                <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-700 group-hover:bg-emerald-200 transition"><i class="fas fa-leaf"></i></div>
                 <div class="flex flex-col leading-none">
-                    <span class="tracking-tight text-sm">五寮尖</span>
-                    <span class="text-[8px] text-stone-500">v3.5.8.exp</span>
+                    <span class="tracking-tight text-lg font-extrabold text-stone-700">五寮尖</span>
+                    <span class="text-[9px] text-stone-400 font-mono">v3.5.10.exp</span>
                 </div>
             </div>
             
-            <div class="flex gap-1 items-center">
-                <button @click="settingsModal.show = true" class="w-8 h-8 rounded hover:bg-stone-200 text-stone-600 transition flex items-center justify-center mr-1 relative" title="公司營運設定">
-                    <i class="fas fa-cog text-sm"></i>
-                    <span class="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" v-if="Object.keys(specialDays).length === 0"></span>
+            <div v-if="currentTab === 'list'" class="hidden md:flex bg-stone-200 p-1 rounded-lg gap-1">
+                <button v-for="mode in groupModes" :key="mode.key" 
+                    @click="groupByField = mode.key"
+                    :class="['px-3 py-1 rounded text-[10px] font-bold transition flex items-center gap-1.5', groupByField === mode.key ? 'bg-white text-stone-800 shadow-sm' : 'text-stone-500 hover:text-stone-700']">
+                    <i :class="mode.icon"></i> {{ mode.label }}
+                </button>
+            </div>
+
+            <div class="flex gap-2 items-center">
+                <button @click="dbModal.show = true" class="w-8 h-8 rounded-full hover:bg-stone-200 text-stone-400 hover:text-stone-600 transition flex items-center justify-center" title="Firebase Raw Data">
+                    <i class="fas fa-database text-xs"></i>
                 </button>
 
-                <div v-if="currentTab === 'list'" class="flex bg-stone-200 rounded p-0.5 mr-1">
-                    <button @click="triggerImport" class="w-7 h-7 rounded hover:bg-white text-stone-600 text-xs transition"><i class="fas fa-file-import"></i></button>
-                    <button @click="exportData" class="w-7 h-7 rounded hover:bg-white text-stone-600 text-xs transition"><i class="fas fa-file-export"></i></button>
+                <button @click="settingsModal.show = true" class="w-8 h-8 rounded-full hover:bg-stone-200 text-stone-600 transition flex items-center justify-center relative" title="公司營運設定">
+                    <i class="fas fa-cog"></i>
+                    <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse border border-white" v-if="Object.keys(specialDays).length === 0"></span>
+                </button>
+
+                <div v-if="currentTab === 'list'" class="flex bg-stone-200 rounded-lg p-0.5 ml-1">
+                    <button @click="triggerImport" class="w-8 h-8 rounded-md hover:bg-white text-stone-600 text-xs transition shadow-sm"><i class="fas fa-file-import"></i></button>
+                    <button @click="exportData" class="w-8 h-8 rounded-md hover:bg-white text-stone-600 text-xs transition shadow-sm"><i class="fas fa-file-export"></i></button>
                     <input type="file" ref="fileInput" class="hidden" @change="handleImport" accept=".json">
                 </div>
 
-                <button v-if="currentTab === 'create'" @click="saveOrder" :disabled="isSaving" class="btn-press bg-emerald-600 text-white px-4 py-1.5 rounded text-xs font-bold shadow-sm hover:bg-emerald-700 transition flex items-center gap-1 disabled:opacity-50">
-                    <i class="fas fa-save"></i> 儲存
+                <button v-if="currentTab === 'create'" @click="saveOrder" :disabled="isSaving" class="btn-press bg-emerald-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow hover:bg-emerald-700 transition flex items-center gap-2 disabled:opacity-50">
+                    <i class="fas fa-save"></i> 儲存訂單
                 </button>
 
-                <button v-if="currentTab === 'list'" @click="switchToCreate" class="btn-press bg-emerald-600 text-white w-8 h-8 rounded flex items-center justify-center shadow-sm hover:bg-emerald-700 transition">
+                <button v-if="currentTab === 'list'" @click="switchToCreate" class="btn-press bg-emerald-600 text-white w-9 h-9 rounded-lg flex items-center justify-center shadow hover:bg-emerald-700 transition">
                     <i class="fas fa-plus"></i>
                 </button>
-                <button v-if="currentTab === 'create'" @click="switchTab('list')" class="btn-press bg-white border border-stone-300 text-stone-600 w-8 h-8 rounded flex items-center justify-center hover:bg-stone-100 transition">
+                <button v-if="currentTab === 'create'" @click="switchTab('list')" class="btn-press bg-white border border-stone-300 text-stone-600 w-9 h-9 rounded-lg flex items-center justify-center hover:bg-stone-100 transition shadow-sm">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
         </header>
 
-        <main class="flex-1 overflow-hidden relative flex flex-col">
+        <main class="flex-1 overflow-hidden relative flex flex-col bg-stone-100">
 
-            <div v-if="currentTab === 'list'" class="flex-1 flex flex-col overflow-y-auto custom-scroll p-2">
-                <div class="flex flex-wrap gap-1 mb-2 sticky top-0 bg-stone-100/95 z-30 py-2 backdrop-blur border-b border-stone-200/50">
+            <div v-if="currentTab === 'list'" class="flex-1 overflow-hidden flex flex-col">
+                <div class="px-4 py-2 bg-white border-b border-stone-200 flex flex-wrap gap-2 items-center shrink-0 shadow-sm z-10">
+                    <span class="text-[10px] font-bold text-stone-400 uppercase tracking-wider mr-1">Filter</span>
                     <label v-for="st in statusOptions" :key="st" class="cursor-pointer">
                         <input type="checkbox" :value="st" v-model="filterStatus" class="hidden filter-checkbox">
-                        <span class="px-2.5 py-1 rounded border border-stone-300 text-[11px] font-bold text-stone-600 bg-white transition select-none hover:border-emerald-400">
+                        <span class="px-2.5 py-1 rounded-full border border-stone-200 text-[10px] font-bold text-stone-500 bg-stone-50 transition select-none hover:border-emerald-400 peer-checked:bg-stone-800 peer-checked:text-white">
                             {{ st }}
                         </span>
                     </label>
+                    <div class="ml-auto text-[10px] text-stone-400 font-mono">
+                        顯示 {{ filteredOrders.length }} 筆
+                    </div>
                 </div>
 
-                <div v-if="loading" class="text-center py-20 text-stone-500 text-sm">讀取中...</div>
+                <div v-if="loading" class="flex-1 flex items-center justify-center text-stone-400 text-sm gap-2">
+                    <i class="fas fa-circle-notch animate-spin text-emerald-500"></i> 讀取資料庫...
+                </div>
                 
-                <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 pb-10">
-                    <div v-for="order in filteredOrders" :key="order.id" @click="editOrder(order)" class="bg-white rounded-lg p-2 shadow-sm border border-stone-200 relative btn-press transition hover:border-emerald-400 cursor-pointer group h-16 flex flex-col justify-between overflow-hidden">
-                        <div class="flex justify-between items-center">
-                            <div class="flex items-center gap-1 overflow-hidden">
-                                <h3 class="font-bold text-base text-stone-800 truncate">{{ order.customerName }}</h3>
-                                <span v-if="order.type" :class="['type-badge', getTypeClass(order.type)]">{{ order.type }}</span>
+                <div v-else class="flex-1 overflow-x-auto overflow-y-hidden custom-scroll p-4 bg-stone-100">
+                    <div class="h-full flex gap-4 min-w-max pb-2">
+                        
+                        <div v-for="(group, groupKey) in groupedOrders" :key="groupKey" class="kanban-col flex flex-col w-[320px] 2xl:w-[360px]">
+                            <div class="p-3 border-b border-stone-300/50 flex justify-between items-center bg-stone-200/50 sticky top-0 z-10 backdrop-blur-sm">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-3 h-3 rounded-full" :class="getGroupColor(groupKey)"></div>
+                                    <span class="font-bold text-stone-700 text-sm">{{ groupKey === 'undefined' ? '未分類' : groupKey }}</span>
+                                    <span class="bg-stone-300 text-stone-600 px-1.5 rounded text-[9px] font-bold min-w-[20px] text-center">{{ group.length }}</span>
+                                </div>
+                                <div v-if="groupByField === 'status' && groupKey === '暫存'" class="text-[9px] text-stone-400">待辦事項</div>
                             </div>
-                            <span :class="['status-badge scale-90 origin-right', getStatusClass(order.status)]">{{ order.status }}</span>
+
+                            <div class="overflow-y-auto custom-scroll flex-1 p-2 space-y-2">
+                                <div v-for="order in group" :key="order.id" class="bg-white rounded-lg p-3 shadow-sm border border-stone-200 hover:border-emerald-400 transition group relative cursor-pointer btn-press" @click="editOrder(order)">
+                                    
+                                    <div class="absolute top-3 right-3 flex gap-1.5 items-center">
+                                        <button @click.stop="openHistory(order.customerName)" class="opacity-0 group-hover:opacity-100 w-5 h-5 bg-stone-100 hover:bg-stone-200 rounded-full flex items-center justify-center text-[10px] text-stone-500 transition" title="顧客歷史/合併">
+                                            <i class="fas fa-history"></i>
+                                        </button>
+                                        <div :class="['dot-type', getTypeDotClass(order.type)]" :title="order.type"></div>
+                                    </div>
+
+                                    <div class="pr-8 mb-2">
+                                        <h3 class="font-extrabold text-stone-800 text-base leading-tight">{{ order.customerName }}</h3>
+                                        <div class="flex items-center gap-1 mt-0.5">
+                                            <i class="fas fa-map-marker-alt text-[9px] text-stone-300"></i>
+                                            <span class="text-[10px] text-stone-500 font-bold bg-stone-50 px-1 rounded">{{ order.area || '未分區' }}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center justify-between border-t border-stone-100 pt-2 mt-1">
+                                        <div class="flex flex-col">
+                                            <span class="label-minimal">本期金額</span>
+                                            <span class="text-emerald-700 font-extrabold font-mono text-sm leading-none">${{ (order.totalAmount || 0).toLocaleString() }}</span>
+                                        </div>
+                                        <div class="flex flex-col items-end">
+                                            <span class="label-minimal">狀態</span>
+                                            <span :class="['status-badge', getStatusClass(order.status)]">{{ order.status }}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-2 w-full h-1 bg-stone-100 rounded-full overflow-hidden">
+                                        <div class="h-full bg-emerald-500 opacity-20" :style="{width: '100%'}"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="flex items-center justify-between text-xs text-stone-500 border-t border-stone-100 pt-1">
-                            <div class="flex items-center gap-1 truncate max-w-[60%]">
-                                <span class="bg-stone-100 px-1.5 rounded text-stone-600 truncate font-medium">{{ order.area || '-' }}</span>
-                                <span class="font-mono text-stone-400 font-bold">@{{ order.unitPrice }}</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="text-emerald-700 font-bold text-sm">${{ order.totalAmount }}</span>
-                                <span class="text-[9px] bg-stone-100 text-stone-500 px-1 rounded-full">{{ formatDateRange(order.dates) }}</span>
-                            </div>
-                        </div>
+
                     </div>
                 </div>
             </div>
 
-            <div v-if="currentTab === 'create'" class="flex-1 flex flex-col lg:flex-row overflow-hidden">
-                
-                <div class="w-full lg:w-[300px] bg-white border-r border-stone-200 h-full flex flex-col z-20 shadow-lg lg:shadow-none overflow-hidden">
-                    <div class="flex-1 overflow-y-auto custom-scroll p-3 space-y-3">
+            <div v-if="currentTab === 'create'" class="flex-1 flex flex-col lg:flex-row overflow-hidden bg-stone-50">
+                <div class="w-full lg:w-[320px] bg-white border-r border-stone-200 h-full flex flex-col z-20 shadow-xl overflow-hidden">
+                    <div class="p-3 border-b border-stone-100 bg-stone-50/50">
+                        <span class="text-[10px] font-bold text-stone-400 uppercase tracking-widest"><i class="fas fa-user-edit mr-1"></i>基本資料</span>
+                    </div>
+                    <div class="flex-1 overflow-y-auto custom-scroll p-4 space-y-4">
                         
-                        <div class="bg-stone-50 rounded-lg border border-stone-200 p-2.5">
-                            <div class="flex items-center gap-1 mb-1">
-                                <i class="fas fa-user-circle text-stone-300 text-[10px]"></i>
-                                <span class="text-[9px] font-bold text-stone-400 uppercase">Profile</span>
+                        <div class="space-y-1">
+                            <label class="label-minimal">顧客姓名</label>
+                            <div class="relative">
+                                <input type="text" v-model="form.customerName" @input="onNameInput" list="customer-list" class="w-full bg-white border-2 border-stone-200 rounded-lg px-3 py-2 text-base font-extrabold focus:border-emerald-500 outline-none text-stone-800 transition" placeholder="輸入姓名...">
+                                <button v-if="form.customerName" @click="openHistory(form.customerName)" class="absolute right-2 top-2 text-stone-400 hover:text-emerald-600"><i class="fas fa-history"></i></button>
                             </div>
-                            <div class="space-y-1.5">
-                                <input type="text" v-model="form.customerName" @input="onNameInput" list="customer-list" class="w-full bg-white border-2 border-stone-300 rounded px-2 py-1 text-sm font-extrabold focus:border-emerald-500 outline-none text-stone-800" placeholder="顧客姓名">
-                                <datalist id="customer-list"><option v-for="c in savedCustomers" :value="c.name"></option></datalist>
+                            <datalist id="customer-list"><option v-for="c in savedCustomers" :value="c.name"></option></datalist>
+                        </div>
 
-                                <div class="grid grid-cols-2 gap-2">
-                                    <div>
-                                        <label class="label-minimal">地區</label>
-                                        <input type="text" v-model="form.area" list="area-options" class="input-heavy">
-                                        <datalist id="area-options"><option v-for="a in uniqueAreas" :value="a"></option></datalist>
-                                    </div>
-                                    <div>
-                                        <label class="label-minimal">單價</label>
-                                        <input type="number" v-model.number="form.unitPrice" class="input-heavy text-right text-emerald-800">
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <div><label class="label-minimal">類型</label><select v-model="form.type" class="input-micro"><option>晨間</option><option>家庭號</option><option>團購</option></select></div>
-                                    <div><label class="label-minimal">狀態</label><select v-model="form.status" class="input-micro text-blue-700 font-bold"><option v-for="s in statusOptions" :key="s">{{ s }}</option></select></div>
-                                </div>
-                                <label class="flex items-center gap-2 cursor-pointer mt-1 bg-white p-1 rounded border border-stone-200 hover:border-purple-300 transition">
-                                    <input type="checkbox" v-model="form.ignoreHolidays" class="text-purple-600 rounded focus:ring-0 w-3 h-3">
-                                    <span class="text-[9px] font-bold text-purple-700">💜 強制配送 (忽視假期)</span>
-                                </label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="label-minimal">地區 (Area)</label>
+                                <input type="text" v-model="form.area" list="area-options" class="input-heavy">
+                                <datalist id="area-options"><option v-for="a in uniqueAreas" :value="a"></option></datalist>
+                            </div>
+                            <div>
+                                <label class="label-minimal text-[7px]">單價 (Unit Price)</label>
+                                <input type="number" v-model.number="form.unitPrice" class="input-heavy text-right text-emerald-800">
                             </div>
                         </div>
 
-                        <div class="bg-stone-50 rounded-lg border border-stone-200 p-2.5">
-                            <div class="flex justify-between items-end mb-1">
-                                <span class="text-[9px] font-bold text-stone-400 uppercase">Schedule</span>
-                                <div class="flex gap-1">
-                                    <button @click="setDays('weekday')" class="px-2 py-0.5 bg-white border border-stone-300 rounded text-[8px] font-bold text-stone-500 hover:border-emerald-500">平日</button>
-                                    <button @click="setDays('everyday')" class="px-2 py-0.5 bg-white border border-stone-300 rounded text-[8px] font-bold text-stone-500 hover:border-emerald-500">每天</button>
-                                </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="label-minimal">類型</label>
+                                <select v-model="form.type" class="input-micro font-bold">
+                                    <option value="晨間">🟠 晨間</option>
+                                    <option value="家庭號">🔴 家庭號</option>
+                                    <option value="團購">🟣 團購</option>
+                                </select>
                             </div>
-                            <div class="flex justify-between mb-2">
-                                <label v-for="d in [1,2,3,4,5,6,0]" :key="d" :class="['w-7 h-7 rounded-md flex items-center justify-center text-[11px] font-bold cursor-pointer transition select-none border-2', form.selectedDays.includes(d) ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-stone-400 border-stone-200 hover:border-stone-300']">
-                                    <input type="checkbox" :value="d" v-model="form.selectedDays" class="hidden" @change="generateDates">
-                                    {{ dayMap[d] }}
-                                </label>
-                            </div>
-                            <div class="flex items-center gap-1">
-                                <input type="month" v-model="dateRange.start" @change="generateDates" class="input-micro w-[45%] text-[10px] text-center font-bold">
-                                <span class="text-stone-400 text-[10px]">➜</span>
-                                <input type="month" v-model="dateRange.end" @change="generateDates" class="input-micro w-[45%] text-[10px] text-center font-bold">
+                            <div>
+                                <label class="label-minimal">狀態</label>
+                                <select v-model="form.status" class="input-micro text-blue-700 font-extrabold">
+                                    <option v-for="s in statusOptions" :key="s">{{ s }}</option>
+                                </select>
                             </div>
                         </div>
 
-                        <div class="bg-emerald-50/50 rounded-lg border border-emerald-100 p-2.5 flex flex-col flex-1">
-                            <div class="flex justify-between items-center mb-1">
-                                <div class="flex bg-white rounded p-0.5 border border-stone-200 shadow-sm">
-                                    <button @click="copyMode='A'" :class="['text-[9px] px-2 py-0.5 rounded transition', copyMode==='A'?'bg-emerald-600 text-white font-bold':'text-stone-500']">明細</button>
-                                    <button @click="copyMode='B'" :class="['text-[9px] px-2 py-0.5 rounded transition', copyMode==='B'?'bg-emerald-600 text-white font-bold':'text-stone-500']">月結</button>
+                        <div class="pt-2 border-t border-stone-100">
+                            <label class="flex items-center gap-2 cursor-pointer p-2 rounded-lg border border-transparent hover:bg-stone-50 hover:border-stone-200 transition">
+                                <input type="checkbox" v-model="form.ignoreHolidays" class="text-purple-600 rounded focus:ring-0 w-4 h-4 border-stone-300">
+                                <div>
+                                    <span class="block text-[11px] font-bold text-stone-700">強制配送</span>
+                                    <span class="block text-[8px] text-stone-400">忽視公司休假日 (紫色)</span>
                                 </div>
-                                
-                                <div class="text-[9px] font-bold text-emerald-700 bg-emerald-100/50 px-2 py-0.5 rounded">
-                                    {{ totalCount }}瓶 / ${{ totalAmount.toLocaleString() }}
-                                </div>
-
-                                <button @click="copyBill" class="text-[9px] bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 px-2 py-0.5 rounded transition font-bold"><i class="far fa-copy"></i> 複製</button>
-                            </div>
-                            <textarea readonly v-model="generatedBillText" class="w-full h-[45vh] text-[11px] font-mono bg-white border border-emerald-200 rounded p-2 text-stone-700 outline-none resize-none mb-0 shadow-inner leading-relaxed"></textarea>
+                            </label>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex-1 flex flex-col h-full bg-stone-100/50 overflow-hidden">
-                    <div class="flex justify-end items-center p-2 gap-2 border-b border-stone-200 bg-white/80 backdrop-blur shrink-0">
-                         <span class="text-[10px] text-stone-500 font-bold mr-auto"><i class="fas fa-info-circle text-emerald-500"></i> 紫點=公司公休/假日</span>
-                         <button @click="openBatchModal" class="text-[10px] bg-white border-2 border-amber-200 text-amber-700 px-3 py-1 rounded-full font-bold hover:bg-amber-50 transition shadow-sm">
-                            <i class="fas fa-bolt"></i> 批次循環
-                         </button>
+                <div class="flex-1 flex flex-col h-full overflow-hidden">
+                    <div class="bg-white border-b border-stone-200 p-2 flex justify-between items-center shadow-sm z-10">
+                        <div class="flex items-center gap-2">
+                            <button @click="setDays('weekday')" class="px-2 py-1 bg-stone-100 hover:bg-stone-200 rounded text-[10px] font-bold text-stone-600 transition">平日 (1-5)</button>
+                            <button @click="setDays('everyday')" class="px-2 py-1 bg-stone-100 hover:bg-stone-200 rounded text-[10px] font-bold text-stone-600 transition">每天 (0-6)</button>
+                            <div class="h-4 w-px bg-stone-300 mx-1"></div>
+                            <label v-for="d in [1,2,3,4,5,6,0]" :key="d" :class="['w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold cursor-pointer transition select-none border', form.selectedDays.includes(d) ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-stone-300 border-stone-200 hover:border-stone-300']">
+                                <input type="checkbox" :value="d" v-model="form.selectedDays" class="hidden" @change="generateDates">
+                                {{ dayMap[d] }}
+                            </label>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <input type="month" v-model="dateRange.start" @change="generateDates" class="input-micro w-24 text-center">
+                            <i class="fas fa-arrow-right text-stone-300 text-xs"></i>
+                            <input type="month" v-model="dateRange.end" @change="generateDates" class="input-micro w-24 text-center">
+                        </div>
                     </div>
-                    
-                    <div class="flex-1 overflow-y-auto custom-scroll p-3">
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                            <div v-for="(monthData, mIndex) in monthsGrid" :key="mIndex" class="bg-white border border-stone-300 rounded-xl overflow-hidden flex flex-col h-full shadow-sm hover:border-emerald-400 transition hover:shadow-md">
-                                <div class="bg-stone-100 p-2 text-center border-b border-stone-200 flex justify-between items-center px-3 cursor-pointer hover:bg-stone-200" @click="toggleMonth(monthData.days)">
-                                    <span class="text-sm font-bold text-stone-700 font-mono tracking-tight">{{ monthData.title }}</span>
-                                    <span v-if="monthData.total > 0" class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">
-                                        {{ monthData.total }}瓶 / ${{ monthData.amount }}
-                                    </span>
-                                </div>
-                                <div class="p-2">
-                                    <div class="grid grid-cols-7 mb-1 text-center border-b border-stone-100 pb-1">
-                                        <span class="text-[10px] font-bold text-stone-600">一</span><span class="text-[10px] font-bold text-stone-600">二</span><span class="text-[10px] font-bold text-stone-600">三</span><span class="text-[10px] font-bold text-stone-600">四</span><span class="text-[10px] font-bold text-stone-600">五</span><span class="text-[10px] font-bold text-stone-600">六</span><span class="text-[10px] font-bold text-red-400">日</span>
+
+                    <div class="flex flex-1 overflow-hidden">
+                        <div class="flex-1 overflow-y-auto custom-scroll p-4 bg-stone-100/50">
+                            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                                <div v-for="(monthData, mIndex) in monthsGrid" :key="mIndex" class="bg-white border border-stone-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition">
+                                    <div class="bg-stone-50 px-3 py-2 border-b border-stone-100 flex justify-between items-center cursor-pointer hover:bg-stone-100" @click="toggleMonth(monthData.days)">
+                                        <span class="font-bold text-stone-700 font-mono text-sm">{{ monthData.title }}</span>
+                                        <span v-if="monthData.total > 0" class="text-[9px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold shadow-sm">
+                                            {{ monthData.total }}瓶
+                                        </span>
                                     </div>
-                                    <div class="grid grid-cols-7 gap-1">
-                                        <div v-for="n in monthData.startDay" :key="'pad-'+n" class="bg-transparent aspect-square"></div>
-                                        <div v-for="d in monthData.days" :key="d.fullDate" 
-                                             @click="d.isValid ? toggleDateQty(d) : null" 
-                                             :title="d.specialReason"
-                                             :class="['aspect-square rounded flex flex-col items-center justify-center relative transition-all duration-100 border',
-                                                d.isValid 
-                                                    ? (d.qty > 0 ? 'bg-emerald-500 border-emerald-600 shadow-sm cursor-pointer z-10' : 'bg-white border-stone-200 cursor-pointer hover:border-emerald-400')
-                                                    : 'bg-stone-100/50 border-transparent opacity-30 cursor-default'
-                                             ]">
-                                            <div v-if="d.isSpecial" class="absolute top-0.5 right-0.5 w-2 h-2 bg-purple-500 rounded-full z-20 shadow-sm border border-white"></div>
-                                            <span :class="['text-[11px] font-bold leading-none', d.qty > 0 ? 'text-white' : (d.isValid ? 'text-stone-900' : 'text-stone-400')]">{{ d.dateStr }}</span>
-                                            <div v-if="d.qty > 0" class="qty-badge absolute -bottom-1 -right-1 w-4 h-4 bg-white text-emerald-700 rounded-full flex items-center justify-center text-[9px] font-extrabold shadow-sm border border-emerald-200">{{ d.qty }}</div>
+                                    <div class="p-2">
+                                        <div class="grid grid-cols-7 mb-1 text-center">
+                                            <span class="text-[9px] text-stone-400 font-bold" v-for="w in ['一','二','三','四','五','六','日']" :key="w">{{w}}</span>
+                                        </div>
+                                        <div class="grid grid-cols-7 gap-1">
+                                            <div v-for="n in monthData.startDay" :key="'pad-'+n"></div>
+                                            <div v-for="d in monthData.days" :key="d.fullDate" 
+                                                @click="d.isValid ? toggleDateQty(d) : null" 
+                                                :title="d.specialReason"
+                                                :class="['aspect-square rounded-md flex flex-col items-center justify-center relative transition-all duration-75 border',
+                                                    d.isValid 
+                                                        ? (d.qty > 0 ? 'bg-emerald-500 border-emerald-600 shadow-sm cursor-pointer z-10 scale-105' : 'bg-white border-stone-100 cursor-pointer hover:border-emerald-300 hover:bg-emerald-50')
+                                                        : 'bg-stone-100/30 border-transparent opacity-30 cursor-default'
+                                                ]">
+                                                <div v-if="d.isSpecial" class="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-purple-400 rounded-full z-20"></div>
+                                                <span :class="['text-[10px] font-bold leading-none', d.qty > 0 ? 'text-white' : 'text-stone-600']">{{ d.dateStr }}</span>
+                                                <div v-if="d.qty > 0" class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-white text-emerald-700 rounded-full flex items-center justify-center text-[8px] font-extrabold shadow border border-emerald-100">{{ d.qty }}</div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <div class="w-[280px] bg-white border-l border-stone-200 flex flex-col shadow-lg z-20">
+                            <div class="p-2 bg-emerald-50 border-b border-emerald-100 flex justify-between items-center">
+                                <span class="text-[10px] font-bold text-emerald-800 uppercase">Bill Preview</span>
+                                <div class="flex bg-white rounded p-0.5 shadow-sm">
+                                    <button @click="copyMode='A'" :class="['text-[9px] px-2 rounded transition', copyMode==='A'?'bg-emerald-600 text-white font-bold':'text-stone-400']">明細</button>
+                                    <button @click="copyMode='B'" :class="['text-[9px] px-2 rounded transition', copyMode==='B'?'bg-emerald-600 text-white font-bold':'text-stone-400']">月結</button>
+                                </div>
+                            </div>
+                            <div class="flex-1 relative">
+                                <textarea readonly v-model="generatedBillText" class="w-full h-full text-[11px] font-mono bg-white p-3 text-stone-700 outline-none resize-none leading-relaxed border-none"></textarea>
+                                <button @click="copyBill" class="absolute bottom-4 right-4 bg-emerald-600 text-white w-10 h-10 rounded-full shadow-lg hover:bg-emerald-700 flex items-center justify-center transition transform active:scale-90" title="複製帳單">
+                                    <i class="far fa-copy"></i>
+                                </button>
+                            </div>
+                            <div class="p-3 bg-stone-50 border-t border-stone-200">
+                                <div class="flex justify-between items-end">
+                                    <span class="text-xs text-stone-500 font-bold">總計</span>
+                                    <span class="text-xl font-extrabold text-emerald-700 font-mono">${{ totalAmount.toLocaleString() }}</span>
+                                </div>
+                                <div class="text-right text-[10px] text-stone-400 font-bold mt-0.5">共 {{ totalCount }} 瓶</div>
                             </div>
                         </div>
                     </div>
@@ -264,28 +334,74 @@
         </main>
 
         <transition name="fade">
-            <div v-if="batchModal.show" class="fixed inset-0 z-[70] flex items-center justify-center bg-stone-900/60 backdrop-blur-sm p-6" @click.self="batchModal.show = false">
-                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col border border-white/50">
-                    <div class="p-4 border-b border-stone-200 bg-stone-50 flex justify-between items-center">
-                        <h3 class="font-bold text-stone-800 text-sm">選擇批次修改月份</h3>
-                        <button @click="batchModal.show = false" class="text-stone-400 hover:text-stone-600"><i class="fas fa-times"></i></button>
-                    </div>
-                    <div class="p-4 max-h-[60vh] overflow-y-auto custom-scroll">
-                        <div class="flex justify-between mb-3 gap-2">
-                            <button @click="batchModal.selected = [...batchModal.months]" class="flex-1 bg-stone-200 text-stone-700 text-xs py-1.5 rounded hover:bg-stone-300 font-bold">全選</button>
-                            <button @click="batchModal.selected = []" class="flex-1 bg-stone-100 text-stone-500 text-xs py-1.5 rounded hover:bg-stone-200 font-bold">全取消</button>
+            <div v-if="historyModal.show" class="fixed inset-0 z-[60] flex items-center justify-center bg-stone-900/50 backdrop-blur-sm p-4 md:p-10" @click.self="historyModal.show = false">
+                <div class="bg-white w-full max-w-5xl h-full max-h-[85vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row border border-white/60">
+                    
+                    <div class="w-full md:w-1/2 bg-stone-50 flex flex-col border-r border-stone-200">
+                        <div class="p-4 border-b border-stone-200 flex justify-between items-center bg-white">
+                            <div>
+                                <h3 class="font-bold text-lg text-stone-800">{{ historyModal.customerName }} <span class="text-xs text-stone-400 font-normal">的歷史訂單</span></h3>
+                            </div>
+                            <button @click="historyModal.show = false" class="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-500 transition flex items-center justify-center"><i class="fas fa-times"></i></button>
                         </div>
-                        <div class="grid grid-cols-3 gap-2">
-                            <label v-for="m in batchModal.months" :key="m" class="cursor-pointer group">
-                                <input type="checkbox" v-model="batchModal.selected" :value="m" class="hidden peer">
-                                <div class="border-2 border-stone-200 rounded-lg py-2 text-center text-xs font-bold text-stone-500 peer-checked:bg-amber-50 peer-checked:text-amber-700 peer-checked:border-amber-400 transition select-none group-hover:border-stone-300">
-                                    {{ m }}
+                        <div class="p-2 bg-amber-50 border-b border-amber-100 text-[10px] text-amber-700 font-bold text-center">
+                            <i class="fas fa-check-double mr-1"></i> 勾選多筆訂單以合併產生帳單文字
+                        </div>
+                        <div class="flex-1 overflow-y-auto custom-scroll p-4 space-y-3">
+                            <div v-if="historyModal.orders.length === 0" class="text-center text-stone-400 py-10">尚無歷史紀錄</div>
+                            <div v-for="ord in historyModal.orders" :key="ord.id" 
+                                :class="['bg-white border rounded-xl p-3 cursor-pointer transition flex items-center gap-3 relative overflow-hidden', historyModal.selectedIds.includes(ord.id) ? 'border-emerald-500 ring-1 ring-emerald-500 shadow-md' : 'border-stone-200 hover:border-emerald-300']"
+                                @click="toggleHistorySelection(ord)">
+                                
+                                <div :class="['w-1 h-full absolute left-0 top-0', getStatusClass(ord.status).includes('paid') ? 'bg-emerald-400' : 'bg-stone-300']"></div>
+                                
+                                <div class="flex items-center justify-center w-6 h-6 rounded border border-stone-300 text-white transition" :class="historyModal.selectedIds.includes(ord.id) ? 'bg-emerald-500 border-emerald-500' : 'bg-white'">
+                                    <i class="fas fa-check text-xs" v-show="historyModal.selectedIds.includes(ord.id)"></i>
                                 </div>
-                            </label>
+
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-[10px] bg-stone-100 text-stone-500 px-1.5 rounded font-bold">{{ formatDateRange(ord.dates) }}</span>
+                                            <div :class="['dot-type', getTypeDotClass(ord.type)]"></div>
+                                        </div>
+                                        <span class="text-emerald-700 font-bold font-mono">${{ ord.totalAmount }}</span>
+                                    </div>
+                                    <div class="flex justify-between items-end">
+                                        <span class="text-[10px] text-stone-400">{{ ord.totalCount }} 瓶 @ {{ ord.unitPrice }}</span>
+                                        <span :class="['status-badge', getStatusClass(ord.status)]">{{ ord.status }}</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="p-4 bg-stone-50 border-t border-stone-200">
-                        <button @click="applyBatch" class="w-full bg-amber-500 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-amber-600 shadow-md shadow-amber-100 transition transform active:scale-95">執行循環 (0 → 1 → 2 ...)</button>
+
+                    <div class="w-full md:w-1/2 bg-white flex flex-col relative">
+                        <div class="p-3 border-b border-stone-100 flex justify-between items-center">
+                            <span class="font-bold text-stone-700 text-sm">合併帳單預覽</span>
+                            <span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">已選 {{ historyModal.selectedIds.length }} 筆</span>
+                        </div>
+                        <textarea readonly :value="combinedBillText" class="flex-1 w-full p-6 text-xs font-mono text-stone-700 outline-none resize-none leading-relaxed"></textarea>
+                        
+                        <div class="p-4 border-t border-stone-100 flex justify-end gap-2 bg-stone-50">
+                            <button v-if="historyModal.selectedIds.length > 0" @click="copyCombinedBill" class="bg-emerald-600 text-white px-6 py-2 rounded-lg font-bold shadow-lg hover:bg-emerald-700 transition flex items-center gap-2">
+                                <i class="far fa-copy"></i> 複製合併內容
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <transition name="fade">
+            <div v-if="dbModal.show" class="fixed inset-0 z-[90] flex items-center justify-center bg-stone-900/80 backdrop-blur p-6" @click.self="dbModal.show = false">
+                <div class="bg-stone-900 w-full max-w-4xl h-[80vh] rounded-xl border border-stone-700 flex flex-col shadow-2xl">
+                    <div class="p-3 border-b border-stone-700 flex justify-between items-center bg-stone-800 rounded-t-xl">
+                        <span class="text-stone-300 font-mono text-xs"><i class="fas fa-database text-emerald-500 mr-2"></i>Firebase Live Data</span>
+                        <button @click="dbModal.show=false" class="text-stone-500 hover:text-white"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="flex-1 overflow-auto p-4 custom-scroll">
+                        <pre class="text-[10px] text-emerald-400 font-mono leading-tight">{{ JSON.stringify(orders, null, 2) }}</pre>
                     </div>
                 </div>
             </div>
@@ -295,25 +411,20 @@
             <div v-if="settingsModal.show" class="fixed inset-0 z-[70] flex items-center justify-center bg-stone-900/60 backdrop-blur-sm p-6" @click.self="settingsModal.show = false">
                 <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col h-[70vh] border border-white/50">
                     <div class="p-4 border-b border-stone-200 bg-stone-50 flex justify-between items-center">
-                        <h3 class="font-bold text-stone-800 text-sm">公司營運特殊日設定 (紫色)</h3>
+                        <h3 class="font-bold text-stone-800 text-sm">營運特殊日設定</h3>
                         <button @click="settingsModal.show = false" class="text-stone-400 hover:text-stone-600"><i class="fas fa-times"></i></button>
                     </div>
                     <div class="p-4 flex-1 overflow-y-auto custom-scroll space-y-3">
                         <div class="flex gap-2">
                             <input type="date" v-model="newHoliday.date" class="input-heavy flex-1">
-                            <input type="text" v-model="newHoliday.reason" placeholder="原因 (例: 颱風)" class="input-heavy flex-1">
+                            <input type="text" v-model="newHoliday.reason" placeholder="原因" class="input-heavy flex-1">
                             <button @click="addHoliday" class="bg-emerald-600 text-white rounded px-3 text-xs font-bold shadow hover:bg-emerald-700"><i class="fas fa-plus"></i></button>
                         </div>
-                        <div v-if="Object.keys(specialDays).length === 0" class="text-center py-4 text-stone-400 text-xs">
-                            尚無設定，<br>請新增或載入預設。
-                            <button @click="loadDefaultHolidays" class="mt-2 text-indigo-500 underline">載入預設假日</button>
-                        </div>
-                        <div v-for="(reason, date) in specialDays" :key="date" class="flex justify-between items-center bg-stone-50 p-2.5 rounded-lg border border-stone-200">
-                            <div>
-                                <div class="text-[11px] font-bold text-stone-700">{{ date }}</div>
-                                <div class="text-[10px] text-purple-600 font-bold">{{ reason }}</div>
+                        <div class="space-y-2 mt-4">
+                             <div v-for="(reason, date) in specialDays" :key="date" class="flex justify-between items-center bg-stone-50 p-2 rounded border border-stone-200">
+                                <div><div class="text-[11px] font-bold text-stone-700">{{ date }}</div><div class="text-[10px] text-purple-600 font-bold">{{ reason }}</div></div>
+                                <button @click="removeHoliday(date)" class="text-stone-400 hover:text-red-500"><i class="fas fa-trash"></i></button>
                             </div>
-                            <button @click="removeHoliday(date)" class="text-stone-400 hover:text-red-500"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
                 </div>
@@ -322,7 +433,7 @@
 
         <transition name="fade">
             <div v-if="modal.show" class="fixed inset-0 z-[80] flex items-center justify-center bg-stone-900/40 backdrop-blur-sm p-6" @click.self="closeModal">
-                <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center transform transition-all scale-100 border border-white/50">
+                <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center border border-white/50">
                     <div :class="['w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl shadow-sm', modal.type==='error'?'bg-red-50 text-red-500':'bg-emerald-50 text-emerald-500']">
                         <i :class="modal.type==='error'?'fas fa-exclamation':'fas fa-check'"></i>
                     </div>
@@ -355,26 +466,40 @@
 
         createApp({
             setup() {
+                // --- Core State ---
                 const currentTab = ref('list');
                 const loading = ref(true);
                 const isSaving = ref(false);
                 const editMode = ref(false);
                 const currentOrderId = ref(null);
-                const modal = reactive({ show: false, title: '通知', message: '處理中...', type: 'info' });
-                const batchModal = reactive({ show: false, months: [], selected: [] });
+                
+                // --- Modals & UI ---
+                const modal = reactive({ show: false, title: '', message: '', type: 'info' });
                 const settingsModal = reactive({ show: false });
-                const newHoliday = reactive({ date: '', reason: '' });
-                // ★ 全域假日 (Reactive Object synced with Firebase)
-                const specialDays = ref({});
+                const dbModal = reactive({ show: false }); // V3.5.10
+                
+                // --- Customer History (V3.5.10) ---
+                const historyModal = reactive({ show: false, customerName: '', orders: [], selectedIds: [] });
 
-                const copyMode = ref('A');
-                const fileInput = ref(null);
+                // --- Data ---
                 const orders = ref([]);
                 const savedCustomers = ref([]);
-                const statusOptions = ['暫存', '已通知', '已出帳', '已收款'];
-                const filterStatus = ref([...statusOptions]); 
-                const dateRange = reactive({ start: '2025-06', end: '2026-03' });
+                const specialDays = ref({});
+                const newHoliday = reactive({ date: '', reason: '' });
+                const fileInput = ref(null);
 
+                // --- Filtering & Grouping (V3.5.10) ---
+                const statusOptions = ['暫存', '已通知', '已出帳', '已收款'];
+                const filterStatus = ref([...statusOptions]);
+                const groupByField = ref('status'); // default grouping
+                const groupModes = [
+                    { key: 'status', label: '依狀態', icon: 'fas fa-tasks' },
+                    { key: 'area', label: '依地區', icon: 'fas fa-map-marked-alt' },
+                    { key: 'type', label: '依類型', icon: 'fas fa-tags' }
+                ];
+
+                // --- Form ---
+                const dateRange = reactive({ start: '2025-06', end: '2026-03' });
                 const form = reactive({ 
                     customerName: '', area: '', unitPrice: 30, 
                     status: '暫存', type: '晨間', selectedDays: [1],
@@ -382,17 +507,19 @@
                 });
                 const quantityMap = reactive(new Map());
                 const dayMap = { 1: '一', 2: '二', 3: '三', 4: '四', 5: '五', 6: '六', 0: '日' };
+                const copyMode = ref('A');
 
-                const showModal = (t='通知', m='完成', type='success') => { modal.title = t; modal.message = m; modal.type = type; modal.show = true; };
-                const closeModal = () => { modal.show = false; };
-                const copyModalContent = () => navigator.clipboard.writeText(modal.message);
+                // --- Methods ---
+                const showModal = (t, m, type='success') => { modal.title = t; modal.message = m; modal.type = type; modal.show = true; };
+                const closeModal = () => modal.show = false;
                 const reloadPage = () => window.location.reload();
 
+                // --- Import/Export ---
                 const exportData = () => {
                     const dataStr = JSON.stringify(orders.value, null, 2);
                     const blob = new Blob([dataStr], { type: "application/json" });
                     const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a'); a.href = url; a.download = `crm.json`; a.click();
+                    const a = document.createElement('a'); a.href = url; a.download = `crm_backup_${new Date().toISOString().split('T')[0]}.json`; a.click();
                 };
                 const triggerImport = () => fileInput.value.click();
                 const handleImport = (e) => {
@@ -401,33 +528,109 @@
                     reader.onload = async (ev) => {
                         try {
                             const data = JSON.parse(ev.target.result);
-                            if(Array.isArray(data) && confirm(`匯入 ${data.length} 筆？`)) {
+                            if(Array.isArray(data) && confirm(`確認匯入 ${data.length} 筆資料？`)) {
                                 for(const item of data) { const { id, ...c } = item; await push(dbRef(db, 'orders'), c); }
-                                showModal('匯入成功', `成功 ${data.length} 筆`);
+                                showModal('匯入成功', `成功載入 ${data.length} 筆`);
                             }
                         } catch(err) { showModal('匯入失敗', err.message, 'error'); }
                     };
                     reader.readAsText(file);
                 };
 
-                // ★ 假日管理 (Firebase)
-                const addHoliday = () => {
-                    if(newHoliday.date && newHoliday.reason) {
-                        update(dbRef(db, 'settings/holidays'), { [newHoliday.date]: newHoliday.reason });
-                        newHoliday.date = ''; newHoliday.reason = '';
-                    }
-                };
-                const removeHoliday = (date) => {
-                    if(confirm('移除此假日？')) remove(dbRef(db, `settings/holidays/${date}`));
-                };
-                const loadDefaultHolidays = () => {
-                    const defaults = {
-                        '2025-09-17': '中秋節', '2025-10-10': '國慶日', '2025-10-31': '颱風假',
-                        '2025-12-25': '行憲紀念日', '2026-01-01': '元旦', '2026-02-17': '春節補假'
-                    };
-                    update(dbRef(db, 'settings/holidays'), defaults);
+                // --- Firebase Listeners ---
+                onMounted(() => {
+                    onValue(dbRef(db, 'orders'), (s) => { 
+                        const d = s.val(); 
+                        // Add null check safety
+                        orders.value = d ? Object.entries(d).map(([k, v]) => ({ id: k, ...v })) : []; 
+                        loading.value = false; 
+                    });
+                    onValue(dbRef(db, 'customers'), (s) => { savedCustomers.value = s.val() ? Object.values(s.val()) : []; });
+                    onValue(dbRef(db, 'settings/holidays'), (s) => { specialDays.value = s.val() || {}; });
+                });
+
+                // --- Computed Logic ---
+                const filteredOrders = computed(() => {
+                    return orders.value.filter(o => filterStatus.value.includes(o.status || '暫存'))
+                        .sort((a,b) => new Date(b.updatedAt||b.createdAt||0) - new Date(a.updatedAt||a.createdAt||0));
+                });
+
+                // ★ V3.5.10 Grouping Logic
+                const groupedOrders = computed(() => {
+                    const groups = {};
+                    const field = groupByField.value;
+                    
+                    filteredOrders.value.forEach(order => {
+                        let key = order[field];
+                        if (field === 'status' && !key) key = '暫存';
+                        if (field === 'area' && !key) key = '未分區';
+                        if (field === 'type' && !key) key = '未分類';
+                        
+                        if (!groups[key]) groups[key] = [];
+                        groups[key].push(order);
+                    });
+
+                    // Sort Keys logic specific to field
+                    const sortedKeys = Object.keys(groups).sort((a,b) => {
+                         if(field === 'status') return statusOptions.indexOf(a) - statusOptions.indexOf(b);
+                         return a.localeCompare(b);
+                    });
+
+                    const sortedGroups = {};
+                    sortedKeys.forEach(k => sortedGroups[k] = groups[k]);
+                    return sortedGroups;
+                });
+
+                // --- History Modal Logic (V3.5.10) ---
+                const openHistory = (name) => {
+                    if(!name) return;
+                    historyModal.customerName = name;
+                    // Find all orders for this customer name
+                    historyModal.orders = orders.value
+                        .filter(o => o.customerName === name)
+                        .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)); // Newest first
+                    historyModal.selectedIds = [];
+                    historyModal.show = true;
                 };
 
+                const toggleHistorySelection = (ord) => {
+                    const idx = historyModal.selectedIds.indexOf(ord.id);
+                    if(idx > -1) historyModal.selectedIds.splice(idx, 1);
+                    else historyModal.selectedIds.push(ord.id);
+                };
+
+                const generateOneBillText = (o) => {
+                    // Helper to generate text for a single order object (simplified reuse logic)
+                    if(!o.dates) return '';
+                    const startKey = Object.keys(o.dates).sort()[0];
+                    if(!startKey) return '';
+                    return `${startKey.substring(0,7)} (${o.totalCount}瓶 $${o.totalAmount})`;
+                };
+
+                const combinedBillText = computed(() => {
+                    if(historyModal.selectedIds.length === 0) return '請勾選左側訂單以產生合併內容...';
+                    
+                    const selected = historyModal.orders.filter(o => historyModal.selectedIds.includes(o.id));
+                    let totalVal = 0;
+                    let totalBtls = 0;
+                    let details = '';
+
+                    selected.forEach(o => {
+                        totalVal += (parseInt(o.totalAmount) || 0);
+                        totalBtls += (parseInt(o.totalCount) || 0);
+                        // Use a simplified line for summary
+                        const range = formatDateRange(o.dates);
+                        details += `• ${range}｜${o.totalCount}瓶 $${o.totalAmount} (${o.status})\n`;
+                    });
+
+                    return `顧客：${historyModal.customerName} - 合併帳單\n------------------\n${details}------------------\n總計：${totalBtls} 瓶\n應收總額：NT$${totalVal.toLocaleString()}`;
+                });
+
+                const copyCombinedBill = () => {
+                    navigator.clipboard.writeText(combinedBillText.value).then(() => showModal('已複製', '合併帳單內容已複製'));
+                };
+
+                // --- Calendar & Calculator Logic ---
                 const toSafeKey = (d) => d.replace(/\//g, '-');
                 
                 const monthsGrid = computed(() => {
@@ -447,8 +650,7 @@
                         const mStr = (m + 1).toString().padStart(2, '0');
                         const monthKey = `${y}-${mStr}`;
                         const daysInMonth = new Date(y, m + 1, 0).getDate();
-                        const firstDayObj = new Date(y, m, 1).getDay();
-                        const firstDayOfWeek = (firstDayObj - 1 + 7) % 7; 
+                        const firstDayOfWeek = (new Date(y, m, 1).getDay() - 1 + 7) % 7;
                         
                         const days = [];
                         let totalQty = 0;
@@ -460,26 +662,19 @@
                             const dayOfWeek = new Date(y, m, d).getDay();
                             
                             const isValid = activeDays.has(dayOfWeek);
-                            const isSpecial = !!specialDays.value[fDateDash]; // Check against reactive
                             const specialReason = specialDays.value[fDateDash];
+                            const isSpecial = !!specialReason;
 
                             let qty = quantityMap.get(fDate) || 0;
+                            // Auto logic: if not set, 0. But we rely on user clicking or batch.
                             if (isValid) totalQty += qty;
-
-                            // Summary Helpers
-                            const dateObj = new Date(y, m, d);
-                            dateObj.setHours(0,0,0,0);
-                            dateObj.setDate(dateObj.getDate() + 3 - (dateObj.getDay() + 6) % 7);
-                            const w1 = new Date(dateObj.getFullYear(), 0, 4);
-                            const wk = 1 + Math.round(((dateObj.getTime() - w1.getTime()) / 86400000 - 3 + (w1.getDay() + 6) % 7) / 7);
 
                             days.push({
                                 fullDate: fDate, dateStr: dStr, dayStr: dayOfWeek,
-                                qty: qty, isValid: isValid, weekNum: wk,
+                                qty: qty, isValid: isValid, 
                                 isSpecial: isSpecial, specialReason: specialReason
                             });
                         }
-                        // ★ Goal 1: Amount Calculation
                         const amount = Math.floor(totalQty * form.unitPrice);
                         grids.push({ title: monthKey, days: days, startDay: firstDayOfWeek, total: totalQty, amount: amount.toLocaleString() });
                         current = new Date(y, m + 1, 1);
@@ -489,60 +684,19 @@
 
                 const toggleDateQty = (d) => { 
                     let q = d.qty; 
-                    if (q === 0) q = 1;
-                    else if (q === 1) q = 2;
-                    else if (q === 2) q = 1.5;
-                    else q = 0;
+                    if (q === 0) q = 1; else if (q === 1) q = 2; else if (q === 2) q = 1.5; else q = 0;
                     quantityMap.set(d.fullDate, q);
                 };
                 
                 const toggleMonth = (days) => {
                     const validDays = days.filter(d => d.isValid);
                     if(validDays.length === 0) return;
-                    const hasQty = validDays.some(d => quantityMap.get(d.fullDate) > 0);
-                    validDays.forEach(d => quantityMap.set(d.fullDate, hasQty ? 0 : 1));
-                };
-
-                const openBatchModal = () => {
-                    batchModal.months = monthsGrid.value.map(m => m.title);
-                    batchModal.selected = batchModal.months.filter(m => {
-                        const mo = parseInt(m.split('-')[1]);
-                        return mo >= 9 && mo <= 12;
-                    });
-                    batchModal.show = true;
-                };
-
-                const applyBatch = () => {
-                    if (batchModal.selected.length === 0) return;
-                    let firstVal = 0;
-                    const firstSelectedMonth = monthsGrid.value.find(m => m.title === batchModal.selected[0]);
-                    if (firstSelectedMonth) {
-                        const found = firstSelectedMonth.days.find(d => d.isValid);
-                        if(found) firstVal = quantityMap.get(found.fullDate) || 0;
-                    }
-                    let n = 0;
-                    if (firstVal === 0) n = 1; else if (firstVal === 1) n = 2; else if (firstVal === 2) n = 1.5; else n = 0;
-
-                    const targets = new Set(batchModal.selected);
-                    monthsGrid.value.forEach(m => {
-                        if (targets.has(m.title)) {
-                            m.days.forEach(d => { 
-                                if(d.isValid) {
-                                    if(d.isSpecial && !form.ignoreHolidays) {
-                                        quantityMap.set(d.fullDate, 0);
-                                    } else {
-                                        quantityMap.set(d.fullDate, n); 
-                                    }
-                                }
-                            });
-                        }
-                    });
-                    batchModal.show = false;
-                };
-
-                const setDays = (type) => {
-                    if(type === 'weekday') form.selectedDays = [1,2,3,4,5];
-                    else form.selectedDays = [0,1,2,3,4,5,6];
+                    // Check if any has qty, if so clear all, else fill 1
+                    // Filter out holidays if not ignored
+                    const targets = form.ignoreHolidays ? validDays : validDays.filter(d => !d.isSpecial);
+                    
+                    const hasQty = targets.some(d => quantityMap.get(d.fullDate) > 0);
+                    targets.forEach(d => quantityMap.set(d.fullDate, hasQty ? 0 : 1));
                 };
 
                 const totalCount = computed(() => {
@@ -552,6 +706,7 @@
                 });
                 const totalAmount = computed(() => Math.floor(totalCount.value * form.unitPrice));
 
+                // --- Bill Text Generation ---
                 const generatedBillText = computed(() => {
                     const active = [];
                     const sortedKeys = Array.from(quantityMap.keys()).sort();
@@ -559,21 +714,17 @@
                         if(quantityMap.get(k) > 0) {
                             const [y,m,d] = k.split('/');
                             const dateObj = new Date(y, m-1, d);
+                            // Week calculation
                             dateObj.setHours(0,0,0,0);
                             dateObj.setDate(dateObj.getDate() + 3 - (dateObj.getDay() + 6) % 7);
                             const w1 = new Date(dateObj.getFullYear(), 0, 4);
                             const wk = 1 + Math.round(((dateObj.getTime() - w1.getTime()) / 86400000 - 3 + (w1.getDay() + 6) % 7) / 7);
-                            const dayMapStr = {0:'日',1:'一',2:'二',3:'三',4:'四',5:'五',6:'六'};
-                            active.push({
-                                fullDate: k, dateStr: d, dayStr: dayMapStr[new Date(y, m-1, d).getDay()],
-                                qty: quantityMap.get(k), weekNum: wk
-                            });
+                            active.push({ fullDate: k, dateStr: d, dayStr: ['日','一','二','三','四','五','六'][new Date(y, m-1, d).getDay()], qty: quantityMap.get(k), weekNum: wk });
                         }
                     }
 
                     if (active.length === 0) return '尚未選擇日期';
-                    const firstDate = active[0].fullDate;
-                    const header = firstDate.substring(0, 7).replace('/', '-');
+                    const header = active[0].fullDate.substring(0, 7).replace('/', '-');
                     const byMonth = {};
                     active.forEach(d => {
                         const k = d.fullDate.substring(0, 7);
@@ -585,7 +736,7 @@
                     if (copyMode.value === 'A') {
                         for(const [mKey, dates] of Object.entries(byMonth)) {
                             const [y, m] = mKey.split('/');
-                            details += `\n🔺 ${y}年${m}月份\n`;
+                            details += `\n🔺 ${y}年${parseInt(m)}月份\n`;
                             const byWeek = {};
                             dates.forEach(d => { if(!byWeek[d.weekNum]) byWeek[d.weekNum]=[]; byWeek[d.weekNum].push(d); });
                             Object.keys(byWeek).sort((a,b)=>a-b).forEach(wk => {
@@ -593,57 +744,83 @@
                             });
                         }
                     } else {
-                        details += '\n每日配送：(依明細)\n';
+                        details += '\n每日配送統計：\n';
                         for(const [mKey, dates] of Object.entries(byMonth)) {
                             const [y, m] = mKey.split('/');
                             const sum = dates.reduce((a,b)=>a+b.qty,0);
-                            const days = dates.length;
-                            details += `${parseInt(m)} 月｜${days} 天，合計：${sum} 瓶\n\n`;
+                            details += `${parseInt(m)}月: ${dates.length}天, 共${sum}瓶\n`;
                         }
                     }
-                    return `羊奶配送帳單\n（${header} 起）\n顧客：${form.customerName}\n計價：每瓶 NT$${form.unitPrice}\n${details}——\n總計：${totalCount.value} 瓶，應收：NT$${totalAmount.value}`;
+                    return `羊奶配送帳單\n（${header} 起）\n顧客：${form.customerName}\n計價：每瓶 NT$${form.unitPrice}\n${details}------------------\n總計：${totalCount.value} 瓶，應收：NT$${totalAmount.value}`;
                 });
 
-                const copyBill = () => { navigator.clipboard.writeText(generatedBillText.value).then(() => showModal('複製成功', '已複製')); };
+                const copyBill = () => { navigator.clipboard.writeText(generatedBillText.value).then(() => showModal('複製成功', '帳單明細已複製')); };
 
+                // --- CRUD ---
                 const saveOrder = async () => {
-                    if (!form.customerName) { showModal('錯誤', '請輸入姓名'); return; }
+                    if (!form.customerName) { showModal('錯誤', '請輸入姓名', 'error'); return; }
                     isSaving.value = true;
                     try {
                         const datesObj = {};
                         for (const [k, v] of quantityMap.entries()) { if(v > 0) datesObj[toSafeKey(k)] = v; }
-                        const payload = {
-                            customerName: form.customerName, area: form.area, unitPrice: form.unitPrice,
-                            status: form.status, type: form.type, selectedDays: form.selectedDays,
-                            totalAmount: totalAmount.value, totalCount: totalCount.value, dates: datesObj, updatedAt: new Date().toISOString(),
-                            ignoreHolidays: form.ignoreHolidays 
-                        };
-                        if (editMode.value && currentOrderId.value) await update(dbRef(db, `orders/${currentOrderId.value}`), payload);
-                        else { payload.createdAt = new Date().toISOString(); await push(dbRef(db, 'orders'), payload); }
                         
+                        // Ensure all fields have defaults to prevent Firebase issues
+                        const payload = {
+                            customerName: form.customerName, 
+                            area: form.area || '未分區', 
+                            unitPrice: form.unitPrice || 30,
+                            status: form.status || '暫存', 
+                            type: form.type || '晨間', 
+                            selectedDays: form.selectedDays || [],
+                            totalAmount: totalAmount.value, 
+                            totalCount: totalCount.value, 
+                            dates: datesObj, 
+                            updatedAt: new Date().toISOString(),
+                            ignoreHolidays: form.ignoreHolidays || false
+                        };
+
+                        if (editMode.value && currentOrderId.value) {
+                            await update(dbRef(db, `orders/${currentOrderId.value}`), payload);
+                        } else {
+                            payload.createdAt = new Date().toISOString();
+                            await push(dbRef(db, 'orders'), payload);
+                        }
+                        
+                        // Save Customer Profile
                         const key = btoa(encodeURIComponent(form.customerName)).replace(/[^a-zA-Z0-9]/g, '');
                         await update(dbRef(db, `customers/${key}`), { 
-                            name: form.customerName, area: form.area, unitPrice: form.unitPrice,
-                            type: form.type, status: form.status, ignoreHolidays: form.ignoreHolidays
+                            name: form.customerName, 
+                            area: form.area, 
+                            unitPrice: form.unitPrice,
+                            type: form.type, 
+                            status: form.status, 
+                            ignoreHolidays: form.ignoreHolidays 
                         });
-                        showModal('成功', '儲存完畢');
+                        
+                        showModal('儲存成功', '訂單資料已更新');
                         switchTab('list');
-                    } catch (e) { showModal('失敗', e.message, 'error'); } finally { isSaving.value = false; }
+                    } catch (e) { showModal('儲存失敗', e.message, 'error'); } 
+                    finally { isSaving.value = false; }
                 };
 
                 const editOrder = (o) => {
                     editMode.value = true; currentOrderId.value = o.id;
-                    form.customerName = o.customerName; form.area = o.area || ''; form.unitPrice = o.unitPrice;
-                    form.status = (o.status && o.status.length<=4) ? o.status : '暫存';
-                    form.type = o.type || '晨間'; form.selectedDays = o.selectedDays || [1];
+                    form.customerName = o.customerName || ''; 
+                    form.area = o.area || ''; 
+                    form.unitPrice = o.unitPrice || 30;
+                    form.status = o.status || '暫存';
+                    form.type = o.type || '晨間'; 
+                    form.selectedDays = o.selectedDays || [1];
                     form.ignoreHolidays = o.ignoreHolidays || false;
+                    
                     quantityMap.clear();
                     if(o.dates) { for(const [k, v] of Object.entries(o.dates)) { quantityMap.set(k.replace(/-/g, '/'), v); } }
+                    
+                    // Parse date range from data to auto-set view? (Optional enhancement)
+                    // For now keep default
                     switchTab('create');
                 };
 
-                const deleteOrder = async (id) => { if(confirm('確定刪除？')) await remove(dbRef(db, `orders/${id}`)); };
-                
                 const onNameInput = () => { 
                     const f = savedCustomers.value.find(c => c.name === form.customerName); 
                     if (f) { 
@@ -652,17 +829,10 @@
                         form.ignoreHolidays = f.ignoreHolidays || false;
                     } 
                 };
-                const createMockData = async () => {
-                    const mocks = [{name:'阿鳳姑姑',price:25,st:'已收款',tp:'晨間'}];
-                    for(const m of mocks) await push(dbRef(db, 'orders'), { 
-                        customerName: m.name, unitPrice: m.price, status: m.st, type: m.tp,
-                        totalAmount: 18250, totalCount: 730, dates: {'2025-01-01': 2}, createdAt: new Date().toISOString() 
-                    });
-                    showModal('成功', '已建立範例');
-                };
 
                 const switchTab = (t) => {
                     if (t === 'create' && !editMode.value) { 
+                        // Reset form
                         form.customerName=''; form.area=''; form.unitPrice=30; 
                         form.status='暫存'; form.type='晨間'; form.selectedDays=[1]; form.ignoreHolidays=false;
                         quantityMap.clear();
@@ -672,42 +842,56 @@
                 };
                 const switchToCreate = () => { editMode.value = false; switchTab('create'); };
 
-                onMounted(() => {
-                    onValue(dbRef(db, 'orders'), (s) => { const d = s.val(); orders.value = d ? Object.entries(d).map(([k, v]) => ({ id: k, ...v })) : []; loading.value = false; });
-                    onValue(dbRef(db, 'customers'), (s) => { savedCustomers.value = s.val() ? Object.values(s.val()) : []; });
-                    // ★ Listen to global holidays
-                    onValue(dbRef(db, 'settings/holidays'), (s) => { specialDays.value = s.val() || {}; });
-                });
-
-                const filteredOrders = computed(() => {
-                    return orders.value.filter(o => filterStatus.value.includes(o.status)).sort((a,b) => new Date(b.updatedAt||b.createdAt)-new Date(a.updatedAt||a.createdAt));
-                });
-
+                // --- Helpers ---
+                const setDays = (type) => {
+                    if(type === 'weekday') form.selectedDays = [1,2,3,4,5];
+                    else form.selectedDays = [0,1,2,3,4,5,6];
+                };
+                const addHoliday = () => {
+                    if(newHoliday.date && newHoliday.reason) {
+                        update(dbRef(db, 'settings/holidays'), { [newHoliday.date]: newHoliday.reason });
+                        newHoliday.date = ''; newHoliday.reason = '';
+                    }
+                };
+                const removeHoliday = (date) => { if(confirm('移除此假日？')) remove(dbRef(db, `settings/holidays/${date}`)); };
+                
                 const formatDateRange = (dates) => {
-                    if (!dates) return '';
+                    if (!dates) return '無日期';
                     const keys = Object.keys(dates).sort();
-                    if (keys.length === 0) return '';
-                    const start = keys[0].replace(/-/g, '/');
-                    const end = keys[keys.length - 1].replace(/-/g, '/');
-                    return `${start} ~ ${end}`;
+                    if (keys.length === 0) return '無日期';
+                    const start = keys[0];
+                    const end = keys[keys.length - 1];
+                    return start === end ? start : `${start}~${end}`;
                 };
 
+                // Styling Helpers
                 const uniqueAreas = computed(() => [...new Set(savedCustomers.value.map(c => c.area).filter(Boolean))]);
-                const getStatusClass = (s) => { switch(s){ case '暫存':return 'status-save'; case '已通知':return 'status-notified'; case '已出帳':return 'status-billed'; case '已收款':return 'status-paid'; default:return 'status-save'; }};
-                const getTypeClass = (t) => { switch(t){ case '團購':return 'type-group'; case '家庭號':return 'type-family'; default:return 'type-morning'; }};
+                const getStatusClass = (s) => { 
+                    switch(s){ case '已通知':return 'status-notified'; case '已出帳':return 'status-billed'; case '已收款':return 'status-paid'; default:return 'status-save'; }
+                };
+                const getTypeDotClass = (t) => {
+                    switch(t){ case '家庭號':return 'dot-family'; case '團購':return 'dot-group'; default:return 'dot-morning'; }
+                };
+                const getGroupColor = (k) => {
+                    // For status groups
+                    if(k==='已收款') return 'bg-emerald-500'; if(k==='已出帳') return 'bg-blue-500'; if(k==='已通知') return 'bg-amber-500'; if(k==='暫存') return 'bg-stone-400';
+                    return 'bg-stone-400';
+                };
 
                 return {
-                    pageTitle: computed(() => currentTab.value === 'list' ? '訂單管理' : (editMode.value ? '修改訂單' : '新增訂單')),
                     currentTab, loading, isSaving, editMode, switchTab, switchToCreate,
                     form, savedCustomers, uniqueAreas, onNameInput, dayMap,
-                    monthsGrid, toggleDateQty, modal, showModal, closeModal, copyModalContent,
+                    monthsGrid, toggleDateQty, modal, showModal, closeModal,
                     totalCount, totalAmount, generatedBillText, copyBill, 
-                    openBatchModal, applyBatch, batchModal, 
-                    toggleMonth, setDays, settingsModal, newHoliday, addHoliday, removeHoliday, loadDefaultHolidays, specialDays,
-                    saveOrder, editOrder, deleteOrder, formatDateRange,
-                    getStatusClass, getTypeClass, createMockData, reloadPage, copyMode,
+                    settingsModal, dbModal, newHoliday, addHoliday, removeHoliday, specialDays,
+                    saveOrder, editOrder, formatDateRange,
+                    getStatusClass, getTypeDotClass, reloadPage, copyMode,
                     exportData, handleImport, triggerImport, fileInput,
-                    statusOptions, filterStatus, filteredOrders, dateRange
+                    statusOptions, filterStatus, filteredOrders, dateRange,
+                    // V3.5.10 New Returns
+                    groupByField, groupModes, groupedOrders, getGroupColor,
+                    historyModal, openHistory, toggleHistorySelection, combinedBillText, copyCombinedBill,
+                    setDays, toggleMonth
                 };
             }
         }).mount('#app');
